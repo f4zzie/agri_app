@@ -5,32 +5,33 @@ Farmers list their produce → Buyers browse and send inquiries directly.
 
 ---
 
-## 📋 Requirements
+## 📋 What you need installed first
 
-- [XAMPP](https://www.apachefriends.org/download.html) (includes Apache + MySQL + PHP)
-- [Composer](https://getcomposer.org/download/) (for email features — optional)
-- [Git](https://git-scm.com/downloads)
-- A browser
+- [XAMPP](https://www.apachefriends.org/download.html) — gives you Apache + MySQL + PHP
+- [Git](https://git-scm.com/downloads) — to clone the repo
+- [Composer](https://getcomposer.org/download/) — **optional**, only needed for email features
 
 ---
 
-## 🚀 Setup from Scratch
+## 🚀 Setup — Step by Step
 
 ### Step 1 — Clone the repo
 
-Open a terminal / command prompt and run:
+Open **Command Prompt** or **Git Bash** and run:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/agri_app.git
+git clone https://github.com/ynwklaus/SCO-207.git
 ```
 
-Then move (or copy) the `agri_app` folder into your XAMPP `htdocs` folder:
+This creates a folder called `SCO-207`. **Rename it to `agri_app`** and move it into your XAMPP htdocs:
 
 ```
-C:\xampp\htdocs\agri_app\     ← Windows
-/opt/lampp/htdocs/agri_app/   ← Linux
-/Applications/XAMPP/htdocs/agri_app/  ← Mac
+Windows:  C:\xampp\htdocs\agri_app
+Mac:      /Applications/XAMPP/htdocs/agri_app
+Linux:    /opt/lampp/htdocs/agri_app
 ```
+
+So the final path should look like: `C:\xampp\htdocs\agri_app\index.php`
 
 ---
 
@@ -40,64 +41,67 @@ C:\xampp\htdocs\agri_app\     ← Windows
 2. Click **Start** next to **Apache**
 3. Click **Start** next to **MySQL**
 
-Both should show green. If MySQL says port 3306 is in use, it means another MySQL is running — stop it first.
+Both rows should turn green. If MySQL says port 3306 is already in use, another MySQL is running — stop it first from Windows Services.
 
 ---
 
-### Step 3 — Create the database
+### Step 3 — Set up the database
 
-1. Open your browser and go to: `http://localhost/phpmyadmin`
-2. Click **Import** (top menu)
-3. Click **Choose File** → select `agri_app/database.sql`
-4. Scroll down → click **Import / Go**
+1. Open your browser → go to `http://localhost/phpmyadmin`
+2. Click **Import** in the top menu
+3. Click **Choose File** → navigate to your `agri_app` folder → select **`database.sql`**
+4. Scroll down → click **Go**
 
-You should see a success message. The `agri_app` database with all tables is now created.
+You should see: *"Import has been successfully finished"*. All tables are now created.
 
 ---
 
-### Step 4 — Configure your environment
+### Step 4 — Create your `.env` file
 
-Inside the `agri_app` folder, find the file `.env.example`.  
-Make a copy of it and rename the copy to `.env`:
+Inside the `agri_app` folder, find `.env.example`.
 
-**Windows (File Explorer):** Right-click `.env.example` → Copy → Paste → Rename to `.env`
+**Copy it and rename the copy to `.env`:**
 
-**Or via terminal:**
 ```bash
+# In Command Prompt (inside the agri_app folder):
 cd C:\xampp\htdocs\agri_app
 copy .env.example .env
 ```
 
-Now open `.env` in any text editor (Notepad, VS Code, etc.) and set these values:
+Then open `.env` in any text editor and make sure it looks like this:
 
 ```env
 DB_HOST=localhost
 DB_NAME=agri_app
 DB_USER=root
-DB_PASS=           # leave blank — XAMPP default has no password
+DB_PASS=
 APP_URL=http://localhost/agri_app
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost/agri_app/oauth_google.php
 ```
 
-> **Leave SMTP and GOOGLE fields blank for now.**  
-> The app works fine without them:
-> - No SMTP → email verification is skipped, accounts activate instantly
-> - No Google credentials → Google login button won't work, but normal email/password login works perfectly
+> ✅ `DB_PASS` is blank by default in XAMPP — leave it blank  
+> ✅ Leave SMTP and GOOGLE fields blank — the app works fine without them  
+> ✅ Email verification is auto-skipped if SMTP is not set up
 
 ---
 
-### Step 5 — Install Composer dependencies (optional)
+### Step 5 — Create the uploads folder
 
-This is only needed if you want **real email sending** (verification emails, inquiry notifications).
+The app needs a folder to store product images:
 
-1. Download and install [Composer](https://getcomposer.org/download/)  
-   During install, point it to your XAMPP PHP: `C:\xampp\php\php.exe`
-
-2. Open a terminal in the `agri_app` folder and run:
 ```bash
-composer install
+mkdir C:\xampp\htdocs\agri_app\uploads
 ```
 
-> If you skip this step, the app still works — emails just won't be sent.
+Or just create a folder named `uploads` inside `agri_app` manually in File Explorer.
 
 ---
 
@@ -114,47 +118,49 @@ You should see the AgriTrack landing page. 🎉
 ### Register as a Farmer 🌾
 - Click **Register** → select **Farmer**
 - Fill in your details → submit
-- Log in → you're on the farmer dashboard
-- Click **List New Product** to add a product for sale
+- Log in → you land on the farmer dashboard
+- Click **"List New Product"** to add something for sale
 
 ### Register as a Business Owner 🏪
 - Click **Register** → select **Business Owner**
-- Fill in your details → submit
-- Log in → click **Browse Marketplace** to see all farmer listings
-- Click **Contact Farmer** on any product to send an inquiry
+- Log in → click **"Browse Marketplace"**
+- Find a product → click **"Contact Farmer"** to send an inquiry
 
 ---
 
 ## 🌐 Features
-- Email/password registration & login
-- Google OAuth (requires your own Google API credentials in `.env`)
-- Farmer dashboard — manage product listings, view buyer inquiries
-- Buyer dashboard — browse marketplace, filter by county/category
-- Inquiry system — buyers contact farmers, farmers get notified
+- Email & password registration with verification
+- Google OAuth login *(needs your own Google API keys in `.env`)*
+- Farmer dashboard — manage listings, see buyer inquiries
+- Buyer dashboard — browse marketplace, filter by county & category
+- Buyer → Farmer inquiry system
 - PDF export of listings
-- QR code sharing per product
-- Crop disease check (demo)
+- QR code per product
+- Disease check (demo)
 - Activity log
-- Swahili / English language toggle
-- Mobile-responsive
+- Swahili / English toggle
+- Mobile responsive
 
 ---
 
-## 🔐 Security
-- `.env` is in `.gitignore` — **never shared, never committed**
-- All DB queries use PDO prepared statements (no SQL injection)
-- Passwords hashed with `password_hash()`
-- CSRF tokens on all forms
+## 🛠 Contributing
 
----
-
-## 🛠 Contributing (for group members)
-
-1. Fork this repo
-2. Create a branch: `git checkout -b your-feature-name`
-3. Make your changes
-4. Push: `git push origin your-feature-name`
-5. Open a **Pull Request** on GitHub
+1. Fork this repo on GitHub
+2. Clone your fork:
+```bash
+git clone https://github.com/YOUR_USERNAME/SCO-207.git
+```
+3. Create a branch for your changes:
+```bash
+git checkout -b your-feature-name
+```
+4. Make your changes, then push:
+```bash
+git add -A
+git commit -m "describe what you changed"
+git push origin your-feature-name
+```
+5. Open a **Pull Request** on GitHub → `ynwklaus/SCO-207`
 
 ---
 
@@ -162,12 +168,13 @@ You should see the AgriTrack landing page. 🎉
 
 | Problem | Fix |
 |---|---|
-| Blank page / PHP errors | Make sure Apache is running in XAMPP |
-| "DB connection failed" | Check `.env` DB settings, make sure MySQL is running |
-| "Table not found" | Re-import `database.sql` in phpMyAdmin |
-| Composer not found | Install Composer and make sure it's added to PATH |
-| Port 3306 in use | Stop any other MySQL service running on your PC |
-| Images not showing | Make sure `uploads/` folder exists inside `agri_app/` (create it manually if needed) |
+| Blank white page | Make sure Apache is running in XAMPP |
+| "Database connection failed" | Check `.env` — confirm MySQL is running, DB_NAME is `agri_app` |
+| "Table not found" errors | Re-import `database.sql` in phpMyAdmin |
+| Images not uploading | Create the `uploads/` folder inside `agri_app/` |
+| Port 3306 already in use | Open Windows Services → stop "MySQL" service, then start XAMPP MySQL |
+| Google login doesn't work | Expected — add your own Google API keys to `.env` to enable it |
+| Emails not sending | Expected — add Gmail SMTP credentials to `.env` to enable it |
 
 ---
 
