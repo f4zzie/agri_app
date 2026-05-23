@@ -20,10 +20,10 @@ Farmers list their produce → Buyers browse and send inquiries directly.
 Open **Command Prompt** or **Git Bash** and run:
 
 ```bash
-git clone https://github.com/ynwklaus/SCO-207.git
+git clone https://github.com/ynwklaus/agri_app.git
 ```
 
-This creates a folder called `SCO-207`. **Rename it to `agri_app`** and move it into your XAMPP htdocs:
+This creates a folder called `agri_app`. Move it into your XAMPP htdocs:
 
 ```
 Windows:  C:\xampp\htdocs\agri_app
@@ -148,7 +148,7 @@ You should see the AgriTrack landing page. 🎉
 1. Fork this repo on GitHub
 2. Clone your fork:
 ```bash
-git clone https://github.com/YOUR_USERNAME/SCO-207.git
+git clone https://github.com/YOUR_USERNAME/agri_app.git
 ```
 3. Create a branch for your changes:
 ```bash
@@ -160,7 +160,7 @@ git add -A
 git commit -m "describe what you changed"
 git push origin your-feature-name
 ```
-5. Open a **Pull Request** on GitHub → `ynwklaus/SCO-207`
+5. Open a **Pull Request** on GitHub → `ynwklaus/agri_app`
 
 ---
 
