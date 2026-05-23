@@ -1,0 +1,15 @@
+# === Sensitive / personal files ===
+.env
+
+# === Composer dependencies (friends run "composer install" themselves) ===
+/vendor/
+
+# === Uploaded files (not part of source code) ===
+/uploads/
+
+# === OS & editor junk ===
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
