@@ -1,4 +1,6 @@
 <?php
+use Dompdf\Dompdf;
+use Dompdf\Options;
 require_once 'includes/auth_check.php';
 require_once 'config.php';
 
@@ -43,13 +45,14 @@ if (isset($_GET['format']) && $_GET['format'] === 'pdf') {
     $stmt->execute([$uid]);
     $crops = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $dompdfAvailable = file_exists(__DIR__ . '/vendor/autoload.php')
-        && class_exists('Dompdf\Dompdf', false)
-        || (file_exists(__DIR__ . '/vendor/autoload.php') && include_once(__DIR__ . '/vendor/autoload.php') && class_exists('Dompdf\Dompdf'));
+    $autoload = __DIR__ . '/vendor/autoload.php';
+    if (file_exists($autoload)) {
+     require_once $autoload;
+    }
+    $dompdfAvailable = class_exists('Dompdf\Dompdf');
 
     if ($dompdfAvailable) {
-        use Dompdf\Dompdf;
-        use Dompdf\Options;
+        
 
         $options = new Options();
         $options->set('defaultFont', 'DejaVu Sans');

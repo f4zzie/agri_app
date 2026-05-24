@@ -1,4 +1,6 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 require_once 'includes/auth_check.php';
 $pageTitle = 'Harvest Reminders';
 require_once 'includes/header.php';
@@ -38,8 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once __DIR__ . '/vendor/autoload.php';
 
         if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-            use PHPMailer\PHPMailer\PHPMailer;
-            use PHPMailer\PHPMailer\Exception;
+            
 
             try {
                 $mail = new PHPMailer(true);

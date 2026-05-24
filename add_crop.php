@@ -1,4 +1,4 @@
-<?php
+<?php ob_start();
 require_once 'includes/auth_check.php';
 $pageTitle = 'List a Product';
 require_once 'includes/header.php';

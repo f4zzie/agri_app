@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmPassword = trim($_POST['confirm_password'] ?? '');
     $phone           = trim($_POST['phone']            ?? '');
     $county          = trim($_POST['county']           ?? '');
+    $role            = trim($_POST['role']             ?? 'farmer');
 
     $nameVal   = htmlspecialchars($name);
     $emailVal  = htmlspecialchars($email);
@@ -338,6 +339,10 @@ function selectRole(r) {
     } else {
         buyer.classList.add('border-success','bg-success','bg-opacity-10');
         farmer.classList.remove('border-success','bg-success','bg-opacity-10');
+    }
+    var googleLink = document.getElementById('btnGoogleRegister');
+    if (googleLink) {
+        googleLink.href = 'oauth_google.php?action=login&role=' + encodeURIComponent(r);
     }
 }
 // Init to saved value on page load

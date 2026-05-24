@@ -79,6 +79,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
     $state = bin2hex(random_bytes(16));
     $_SESSION['oauth_state'] = $state;
 
+    // Check if role is specified and valid
+    if (isset($_GET['role']) && in_array($_GET['role'], ['farmer', 'buyer'])) {
+        $_SESSION['oauth_role'] = $_GET['role'];
+    } else {
+        unset($_SESSION['oauth_role']);
+    }
+
     $params = http_build_query([
         'client_id'     => $clientId,
         'redirect_uri'  => $redirectUri,
@@ -198,21 +205,28 @@ if (isset($_GET['code'])) {
         }
         $userId   = (int) $existingUser['id'];
         $userName = $existingUser['name'];
+        $role     = $existingUser['role'] ?? 'farmer';
     } else {
         // Create new user (no password, Google-only)
+        $role = $_SESSION['oauth_role'] ?? 'farmer';
+        if (!in_array($role, ['farmer', 'buyer'])) {
+            $role = 'farmer';
+        }
         $ins = $db->prepare(
-            'INSERT INTO users (name, email, google_id, email_verified)
-             VALUES (:name, :email, :gid, 1)'
+            'INSERT INTO users (name, email, google_id, email_verified, role)
+             VALUES (:name, :email, :gid, 1, :role)'
         );
         $ins->execute([
             ':name'  => $googleName,
             ':email' => $googleEmail,
             ':gid'   => $googleId,
+            ':role'  => $role,
         ]);
         $userId   = (int) $db->lastInsertId();
         $userName = $googleName;
 
-        log_activity($userId, 'register_google', 'Account created via Google OAuth');
+        log_activity($userId, 'register_google', "Account created via Google OAuth as {$role}");
+        unset($_SESSION['oauth_role']);
     }
 
     // --- Set session ---
@@ -220,6 +234,7 @@ if (isset($_GET['code'])) {
     $_SESSION['user_id'] = $userId;
     $_SESSION['name']    = $userName;
     $_SESSION['email']   = $googleEmail;
+    $_SESSION['role']    = $role;
 
     log_activity($userId, 'login_google', 'Logged in via Google OAuth');
 

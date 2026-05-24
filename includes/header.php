@@ -105,6 +105,12 @@ $userRole    = $_SESSION['role'] ?? 'farmer';
                     <i class="bi bi-chat-dots me-2"></i>My Inquiries
                 </a>
             </li>
+            <!-- Common: Activity Log -->
+            <li class="nav-item">
+                <a class="nav-link text-white sidebar-link" href="<?= $root ?>activity_log.php">
+                    <i class="bi bi-clock-history me-2"></i><?= t('activity_log') ?>
+                </a>
+            </li>
             <?php if ($userRole === 'farmer'): ?>
             <!-- Farmer-only links -->
             <li class="nav-item">
@@ -120,11 +126,6 @@ $userRole    = $_SESSION['role'] ?? 'farmer';
             <li class="nav-item">
                 <a class="nav-link text-white sidebar-link" href="<?= $root ?>export.php">
                     <i class="bi bi-file-earmark-pdf me-2"></i><?= t('export_pdf') ?>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>activity_log.php">
-                    <i class="bi bi-clock-history me-2"></i><?= t('activity_log') ?>
                 </a>
             </li>
             <li class="nav-item">

@@ -52,6 +52,7 @@ $actionLabels = [
     'send_reminders'  => 'Send Reminders',
     'login'           => 'Login',
     'logout'          => 'Logout',
+    'send_inquiry'    => 'Send Inquiry',
 ];
 ?>
 
@@ -140,6 +141,7 @@ $actionLabels = [
                                         'send_reminders'  => 'bi-bell text-warning',
                                         'login'           => 'bi-box-arrow-in-right text-success',
                                         'logout'          => 'bi-box-arrow-right text-secondary',
+                                        'send_inquiry'    => 'bi-chat-left-text text-success',
                                     ];
                                     $icon = $iconMap[$actionKey] ?? 'bi-activity text-secondary';
                                     ?>
