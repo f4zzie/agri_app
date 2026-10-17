@@ -335,6 +335,7 @@ return [
     'avatar_hint'              => 'JPEG, PNG, GIF or WebP. Max 2 MB.',
     'phone_hint'               => 'Buyers and farmers use this to reach you, including on WhatsApp.',
     'email_cannot_change'      => 'Email cannot be changed.',
+    'demo_account_locked'      => 'This is a shared demo account, so its password, email and role can\'t be changed. Register your own account to try that.',
     'save_profile'             => 'Save Profile',
     'set_password'             => 'Set a Password',
     'google_set_password'      => 'You signed up with Google. Set a password to also log in with your email.',

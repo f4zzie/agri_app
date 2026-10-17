@@ -16,7 +16,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
  && docker-php-ext-configure gd --with-jpeg --with-freetype \
  && docker-php-ext-install -j"$(nproc)" pdo_mysql gd \
- && a2enmod rewrite headers \
+ && a2enmod rewrite headers remoteip \
  && apt-get purge -y --auto-remove \
  && rm -rf /var/lib/apt/lists/*
 

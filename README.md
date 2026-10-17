@@ -25,14 +25,14 @@ A normalised schema evolved through versioned migrations, with CHECK constraints
 - [Getting started](#getting-started)
 - [Testing and quality](#testing-and-quality)
 - [Project structure](#project-structure)
-- [SCO 207 report](#sco-207-report)
 - [Limitations and roadmap](#limitations-and-roadmap)
 
 ---
 
 ## What I built
 
-> **TODO (author): this was a group project. 
+agri_app is an agricultural application centered on farm-related data and workflows. It provides a simple interface for interacting with that information. The app is intended to make common agricultural tasks easier to carry out.
+
 ---
 
 ## Features
@@ -222,7 +222,7 @@ docker compose up --build
 
 Open <http://localhost:8080>. On first start the container waits for MariaDB, applies all migrations and seeds demo data. Data and uploads persist in the `db_data` and `uploads` volumes; `docker compose down -v` resets everything.
 
-To deploy, run the same compose file on any small VPS behind Caddy/nginx for HTTPS (change the passwords and `APP_URL` first), or deploy the Dockerfile to Render/Railway with a managed MySQL/MariaDB, the `DB_*`, `APP_URL` and `SEED_DEMO_DATA=1` variables, and a persistent disk at `/var/www/html/public/uploads`.
+To deploy a public demo with HTTPS on a VPS, follow **[docs/DEPLOY.md](docs/DEPLOY.md)**. It uses `docker-compose.prod.yml` (Caddy in front of the app, secrets in `.env`) and a nightly `bin/reset_demo.php` cron job. You can also deploy the Dockerfile to Render/Railway with a managed MySQL/MariaDB, the `DB_*`, `APP_URL` and `SEED_DEMO_DATA=1` variables, and a persistent disk at `/var/www/html/public/uploads`.
 
 ### Option 2 — XAMPP (or any PHP 8.1+ with MySQL/MariaDB)
 
@@ -256,14 +256,14 @@ All settings are environment variables (`.env` locally; real environment variabl
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Email verification, password reset, notifications. Without them, new accounts start verified. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | “Continue with Google” (button hidden otherwise) |
 | `AT_USERNAME`, `AT_API_KEY`, `AT_SENDER_ID` | SMS via Africa's Talking (`AT_USERNAME=sandbox` for testing) |
-| `DEMO_MODE=1` | Shows the demo logins on the landing and login pages |
+| `DEMO_MODE=1` | Public demo: shows the demo logins on the landing and login pages, locks their password, never sends real email or SMS (even if `SMTP_*`/`AT_*` are set) and auto-verifies new registrations |
 
 ---
 
 ## Testing and quality
 
 ```bash
-composer test        # PHPUnit: 48 unit + 12 integration tests (integration needs a DB server)
+composer test        # PHPUnit: 54 unit + 12 integration tests (integration needs a DB server)
 composer analyse     # PHPStan, level 5
 composer lint        # php -l on every file
 tests/smoke.sh       # end-to-end over HTTP against a running server (see the script header)
@@ -289,13 +289,18 @@ src/             classes: Upload, CropInput, Inquiries, Migrator, Token, Phone, 
 config.php       env loading, DB connection, sessions, i18n, CSRF, mail helpers
 lang/            en.php and sw.php
 migrations/      001–008 SQL migrations
-bin/             migrate.php, seed.php
+bin/             migrate.php, seed.php, reset_demo.php
 tools/           explain_demo.php, generate_report.php
 tests/           Unit/, Integration/, smoke.sh
-docs/            EXPLAIN.md, screenshots/
-docker/          entrypoint and Apache config
+docs/            EXPLAIN.md, DEPLOY.md, screenshots/
+docker/          entrypoint, Apache config and Caddyfile (docker-compose.prod.yml)
 ```
 
+---
 
+## Limitations and roadmap
 
-
+- Disease check is not automated: it stores the photo and shows a guide; an image-recognition model could be added later.
+- No in-app payment: deals are paid outside the app; M-Pesa (Daraja) deposits are the natural next step.
+- SMS is unit-tested with a fake transport but has not been run against the live Africa's Talking API.
+- Product names are free text, so price trends group by lower-cased name; a product reference table would make trends more robust.

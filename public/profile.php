@@ -66,6 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'profile') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'password') {
     csrf_verify();
 
+    if (App\Demo::isProtectedAccount($user['email'])) {
+        // Shared demo login: one visitor must not lock the others out
+        flash('warning', t('demo_account_locked'));
+        header('Location: profile.php');
+        exit;
+    }
+
     $currentPassword = (string) ($_POST['current_password'] ?? '');
     $newPassword     = (string) ($_POST['new_password'] ?? '');
     $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
@@ -97,6 +104,7 @@ $form = $action === 'profile'
     ? ['name' => $_POST['name'] ?? '', 'phone' => $_POST['phone'] ?? '', 'county' => (string) ($_POST['county'] ?? '')]
     : ['name' => $user['name'], 'phone' => (string) $user['phone'], 'county' => (string) $user['county_id']];
 $avatar = upload_url($user['avatar'], 'avatars');
+$demoLocked = App\Demo::isProtectedAccount($user['email']);
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -175,9 +183,14 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="alert alert-danger"><ul class="mb-0"><?php foreach ($passwordErrors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
                     <?php endif; ?>
 
+                    <?php if ($demoLocked): ?>
+                        <div class="alert alert-info small"><i class="bi bi-lock me-1"></i><?= t('demo_account_locked') ?></div>
+                    <?php endif; ?>
+
                     <form method="POST" action="profile.php">
                         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                         <input type="hidden" name="action" value="password">
+                        <fieldset <?= $demoLocked ? 'disabled' : '' ?>>
 
                         <?php if ($user['password_hash']): ?>
                             <div class="mb-3">
@@ -197,6 +210,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <input type="password" class="form-control" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
                         </div>
                         <button type="submit" class="btn btn-warning"><i class="bi bi-shield-lock me-1"></i><?= $user['password_hash'] ? t('change_password') : t('set_password') ?></button>
+                        </fieldset>
                     </form>
                 </div>
             </div>

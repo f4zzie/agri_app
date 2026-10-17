@@ -23,7 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
-        if ($user) {
+        // Shared demo logins can't be reset (same message, so nothing is revealed)
+        if ($user && !App\Demo::isProtectedAccount($email)) {
             [$token, $tokenHash] = App\Token::generate();
 
             $db->beginTransaction();

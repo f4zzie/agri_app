@@ -334,6 +334,7 @@ return [
     'avatar_hint'              => 'JPEG, PNG, GIF au WebP. Ukubwa wa juu MB 2.',
     'phone_hint'               => 'Wanunuzi na wakulima wataitumia kukufikia, hata kwa WhatsApp.',
     'email_cannot_change'      => 'Barua pepe haiwezi kubadilishwa.',
+    'demo_account_locked'      => 'Hii ni akaunti ya majaribio inayotumiwa na watu wengi, kwa hiyo nenosiri, barua pepe na jukumu lake haviwezi kubadilishwa. Jisajili akaunti yako mwenyewe ili kujaribu hilo.',
     'save_profile'             => 'Hifadhi Wasifu',
     'set_password'             => 'Weka Nenosiri',
     'google_set_password'      => 'Ulijisajili kwa Google. Weka nenosiri ili pia uweze kuingia kwa barua pepe.',
