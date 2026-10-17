@@ -100,3 +100,57 @@ jobs:
           php -d log_errors=1 -d display_errors=0 -d error_log=/tmp/agritrack.log -S 127.0.0.1:8080 -t public > /dev/null 2>&1 &
           for i in $(seq 20); do curl -fs -o /dev/null http://127.0.0.1:8080/login.php && break; sleep 0.5; done
           SERVER_LOG=/tmp/agritrack.log tests/smoke.sh http://127.0.0.1:8080
+
+  docker-build:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build
+        run: docker build -t agritrack .
+
+  docker-compose:
+    name: Docker Compose stack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the stack
+        run: docker compose up -d --build
+      - name: Wait for the app (up to 90s)
+        run: |
+          for i in $(seq 45); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login.php || true)
+            [ "$code" = "200" ] && echo "App is up after ~$((i * 2))s" && exit 0
+            sleep 2
+          done
+          echo "App did not return 200 on /login.php within 90s (last: $code)"
+          exit 1
+      - name: Pages return 200
+        run: |
+          for page in index.php login.php; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8080/$page")
+            echo "$page -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
+      - name: Demo buyer can log in
+        run: |
+          jar=$(mktemp)
+          token=$(curl -s -c "$jar" -b "$jar" http://localhost:8080/login.php \
+            | sed -n 's/.*name="csrf_token" value="\([^"]*\)".*/\1/p' | head -n1)
+          [ -n "$token" ] || { echo "No csrf_token in login form"; exit 1; }
+          out=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -c "$jar" -b "$jar" \
+            --data-urlencode "csrf_token=$token" \
+            --data-urlencode "email=buyer@agritrack.test" \
+            --data-urlencode "password=Demo@1234" \
+            http://localhost:8080/login.php)
+          echo "POST login.php -> $out"
+          case "$out" in
+            "302 "*dashboard.php) ;;
+            *) echo "Expected a 302 to dashboard.php"; exit 1 ;;
+          esac
+      - name: Container logs
+        if: failure()
+        run: docker compose logs
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
