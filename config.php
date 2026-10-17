@@ -142,6 +142,17 @@ function t(string $key): string
 }
 
 // ---------------------------------------------------------------------------
+// 4b. lang_url() – link to the current page in another language,
+//     keeping the existing query string (e.g. ?id=5)
+// ---------------------------------------------------------------------------
+function lang_url(string $lang): string
+{
+    $query = $_GET;
+    $query['lang'] = $lang;
+    return '?' . htmlspecialchars(http_build_query($query), ENT_QUOTES);
+}
+
+// ---------------------------------------------------------------------------
 // 5. csrf_token() – generate / return CSRF token
 // ---------------------------------------------------------------------------
 function csrf_token(): string

@@ -103,11 +103,11 @@ $currentLang = $_SESSION['lang'] ?? 'en';
 
         <!-- Language Switcher -->
         <div class="d-flex justify-content-end mb-2 gap-1">
-            <a href="?lang=en&token=<?= urlencode($token) ?>"
+            <a href="<?= lang_url('en') ?>"
                class="btn btn-sm <?= $currentLang === 'en' ? 'btn-success' : 'btn-outline-success' ?>">
                 <?= t('english') ?>
             </a>
-            <a href="?lang=sw&token=<?= urlencode($token) ?>"
+            <a href="<?= lang_url('sw') ?>"
                class="btn btn-sm <?= $currentLang === 'sw' ? 'btn-success' : 'btn-outline-success' ?>">
                 <?= t('swahili') ?>
             </a>

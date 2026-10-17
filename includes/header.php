@@ -54,11 +54,11 @@ $userRole    = $_SESSION['role'] ?? 'farmer';
     <div class="ms-auto d-flex align-items-center gap-3">
         <!-- Language switcher -->
         <div class="d-flex gap-1">
-            <a href="?lang=en"
+            <a href="<?= lang_url('en') ?>"
                class="btn btn-sm <?= $currentLang === 'en' ? 'btn-light' : 'btn-outline-light' ?>">
                 <?= t('english') ?>
             </a>
-            <a href="?lang=sw"
+            <a href="<?= lang_url('sw') ?>"
                class="btn btn-sm <?= $currentLang === 'sw' ? 'btn-light' : 'btn-outline-light' ?>">
                 <?= t('swahili') ?>
             </a>
