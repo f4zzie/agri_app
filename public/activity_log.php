@@ -72,7 +72,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php if ($filterAction !== ''): ?>
                     <div class="col-auto"><a href="activity_log.php" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle me-1"></i><?= t('clear') ?></a></div>
                 <?php endif; ?>
-                <div class="col-auto ms-auto"><small class="text-muted"><?= sprintf(t('n_records'), $totalRows) ?></small></div>
+                <div class="col-auto ms-auto"><small class="text-muted"><?= tn('n_records', $totalRows) ?></small></div>
             </form>
         </div>
     </div>

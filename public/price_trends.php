@@ -136,7 +136,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card border-0 shadow-sm h-100"><div class="card-body">
             <div class="small text-muted"><?= t('avg_listed_now') ?></div>
             <div class="fs-4 fw-bold"><?= $summary && $summary['avg_now'] ? 'KSh ' . number_format((float) $summary['avg_now'], 2) : '—' ?></div>
-            <div class="small text-muted"><?= sprintf(t('n_active_listings'), (int) ($summary['listings'] ?? 0)) ?></div>
+            <div class="small text-muted"><?= tn('n_active_listings', (int) ($summary['listings'] ?? 0)) ?></div>
         </div></div>
     </div>
     <div class="col-6 col-lg-3">

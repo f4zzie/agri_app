@@ -9,6 +9,16 @@ function e(?string $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * Count-dependent string: uses "<key>_one" for 1 and "<key>_other" otherwise,
+ * formatted with the count, e.g. tn('n_inquiries', 2) -> "2 inquiries".
+ * Extra sprintf arguments follow the count.
+ */
+function tn(string $key, int $n, mixed ...$args): string
+{
+    return sprintf(t($key . ($n === 1 ? '_one' : '_other')), $n, ...$args);
+}
+
 /** Translated category name (falls back to the stored English name). */
 function t_category(?string $name): string
 {

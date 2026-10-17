@@ -117,7 +117,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <td><?= e($c['expected_harvest']) ?></td>
                                         <td>
                                             <span class="badge <?= $daysLeft <= 2 ? 'bg-danger' : 'bg-warning text-dark' ?>">
-                                                <?= $daysLeft === 0 ? t('today') : sprintf(t('n_days'), $daysLeft) ?>
+                                                <?= $daysLeft === 0 ? t('today') : tn('n_days', $daysLeft) ?>
                                             </span>
                                         </td>
                                     </tr>

@@ -31,8 +31,8 @@ final class LangTest extends TestCase
         $en = self::load('en');
         $sw = self::load('sw');
         foreach ($en as $key => $text) {
-            preg_match_all('/%[sd]/', $text, $a);
-            preg_match_all('/%[sd]/', $sw[$key], $b);
+            preg_match_all('/%(?:\\d\\$)?[sd]/', $text, $a);
+            preg_match_all('/%(?:\\d\\$)?[sd]/', $sw[$key], $b);
             sort($a[0]);
             sort($b[0]);
             self::assertSame($a[0], $b[0], "Placeholder mismatch for '{$key}'");
@@ -50,6 +50,14 @@ final class LangTest extends TestCase
             foreach ($m[1] as $key) {
                 if (!isset($en[$key])) {
                     $missing[] = basename($file) . ': ' . $key;
+                }
+            }
+            preg_match_all("/\\btn\\('([a-z0-9_]+)'/", (string) file_get_contents($file), $m);
+            foreach ($m[1] as $key) {
+                foreach (['_one', '_other'] as $form) {
+                    if (!isset($en[$key . $form])) {
+                        $missing[] = basename($file) . ': ' . $key . $form;
+                    }
                 }
             }
         }

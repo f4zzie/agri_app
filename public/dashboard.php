@@ -169,7 +169,7 @@ $statCard = static function (string $icon, string $color, string $label, $value,
                                 <td class="d-none d-lg-table-cell">
                                     <?php if ($p['inquiry_count'] > 0): ?>
                                         <a href="my_inquiries.php" class="badge bg-warning text-dark text-decoration-none">
-                                            <?= sprintf(t('n_inquiries'), (int) $p['inquiry_count']) ?>
+                                            <?= tn('n_inquiries', (int) $p['inquiry_count']) ?>
                                         </a>
                                     <?php else: ?>
                                         <span class="text-muted small"><?= t('none') ?></span>

@@ -67,11 +67,11 @@ $stars  = static fn (float $s): string => str_repeat('★', (int) round($s)) . s
         <div class="text-center">
             <?php if ($farmer['rating_count'] > 0): ?>
                 <div class="text-warning fs-4" aria-label="<?= e((string) $farmer['avg_rating']) ?>/5"><?= $stars((float) $farmer['avg_rating']) ?></div>
-                <div class="small text-muted"><?= sprintf(t('rating_summary'), $farmer['avg_rating'], (int) $farmer['rating_count']) ?></div>
+                <div class="small text-muted"><?= tn('rating_summary', (int) $farmer['rating_count'], $farmer['avg_rating']) ?></div>
             <?php else: ?>
                 <div class="small text-muted"><?= t('no_ratings_yet') ?></div>
             <?php endif; ?>
-            <div class="small text-muted"><?= sprintf(t('deals_completed'), (int) $farmer['deals_completed']) ?></div>
+            <div class="small text-muted"><?= tn('deals_completed', (int) $farmer['deals_completed']) ?></div>
             <?php if (($_SESSION['role'] ?? '') === 'buyer'): ?>
                 <div class="mt-2"><?= whatsapp_button($farmer['phone'], t('wa_hello_farmer')) ?></div>
             <?php endif; ?>
@@ -119,7 +119,7 @@ $stars  = static fn (float $s): string => str_repeat('★', (int) round($s)) . s
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body py-2">
                         <div class="d-flex justify-content-between">
-                            <span class="text-warning"><?= $stars((float) $r['score']) ?></span>
+                            <span class="text-warning fs-5" aria-label="<?= (int) $r['score'] ?>/5"><?= $stars((float) $r['score']) ?></span>
                             <small class="text-muted"><?= date('d M Y', strtotime($r['created_at'])) ?></small>
                         </div>
                         <?php if ($r['comment']): ?><p class="small mb-1">“<?= e($r['comment']) ?>”</p><?php endif; ?>

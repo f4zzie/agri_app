@@ -81,18 +81,18 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h1 class="h4 mb-0">🌾 <?= t('marketplace') ?></h1>
-    <span class="badge bg-success fs-6"><?= sprintf(t('n_products_listed'), $totalProducts) ?></span>
+    <span class="badge bg-success fs-6"><?= tn('n_products_listed', $totalProducts) ?></span>
 </div>
 
 <!-- Filter Bar -->
 <form method="GET" class="card card-body mb-4 p-3">
     <div class="row g-2 align-items-end">
-        <div class="col-md-3">
+        <div class="col-12 col-lg-4">
             <label for="q" class="form-label small fw-semibold mb-1"><?= t('search') ?></label>
             <input type="search" name="q" id="q" class="form-control form-control-sm"
                    placeholder="<?= t('search_crop_farmer') ?>" value="<?= e($search) ?>">
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-lg-2">
             <label for="county" class="form-label small fw-semibold mb-1"><?= t('county') ?></label>
             <select name="county" id="county" class="form-select form-select-sm">
                 <option value=""><?= t('all_counties') ?></option>
@@ -101,7 +101,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-lg-2">
             <label for="category" class="form-label small fw-semibold mb-1"><?= t('category') ?></label>
             <select name="category" id="category" class="form-select form-select-sm">
                 <option value=""><?= t('all') ?></option>
@@ -110,7 +110,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-lg-2">
             <label for="status" class="form-label small fw-semibold mb-1"><?= t('availability') ?></label>
             <select name="status" id="status" class="form-select form-select-sm">
                 <option value=""><?= t('all') ?></option>
@@ -119,7 +119,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-6 col-md-1">
+        <div class="col-6 col-lg-2">
             <label for="stage" class="form-label small fw-semibold mb-1"><?= t('growth_stage') ?></label>
             <select name="stage" id="stage" class="form-select form-select-sm">
                 <option value=""><?= t('all') ?></option>
@@ -128,8 +128,8 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-md-2 d-flex gap-2">
-            <button type="submit" class="btn btn-success btn-sm flex-grow-1">
+        <div class="col-12 d-flex gap-2 justify-content-end">
+            <button type="submit" class="btn btn-success btn-sm px-4">
                 <i class="bi bi-search me-1"></i><?= t('filter') ?>
             </button>
             <a href="marketplace.php" class="btn btn-outline-secondary btn-sm"><?= t('clear') ?></a>
@@ -168,7 +168,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small class="text-muted">
                     <a href="farmer.php?id=<?= (int) $p['farmer_id'] ?>" class="text-reset"><i class="bi bi-person me-1"></i><?= e($p['farmer_name']) ?></a>
                     <?php if ($p['rating_count']): ?>
-                        <span class="text-warning ms-1" title="<?= sprintf(t('rating_summary'), $p['avg_rating'], (int) $p['rating_count']) ?>">★ <?= e((string) $p['avg_rating']) ?></span>
+                        <span class="text-warning ms-1" title="<?= tn('rating_summary', (int) $p['rating_count'], $p['avg_rating']) ?>">★ <?= e((string) $p['avg_rating']) ?></span>
                     <?php endif; ?>
                 </small>
                 <div class="fw-semibold text-success mt-1"><?= format_price($p['price'], $p['unit']) ?></div>
