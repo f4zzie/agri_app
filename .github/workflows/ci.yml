@@ -152,6 +152,19 @@ jobs:
         env:
           B: http://localhost:8080
         run: tests/demo_lock.sh "$B"
+      - name: Demo reset (bin/reset_demo.php)
+        run: |
+          if docker compose exec -T -e DEMO_MODE=0 app php bin/reset_demo.php; then
+            echo "reset_demo.php ran with DEMO_MODE=0"; exit 1
+          fi
+          docker compose exec -T app sh -c 'touch public/uploads/stray.jpg public/uploads/avatars/a.png'
+          docker compose exec -T app php bin/reset_demo.php
+          left=$(docker compose exec -T app sh -c 'cd public/uploads && find . -mindepth 1 | sort | tr "\n" " "')
+          echo "uploads after reset: $left"
+          [ "$left" = "./.htaccess ./avatars ./disease_checks " ]
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login.php)
+          [ "$code" = 200 ]
+          tests/demo_lock.sh http://localhost:8080
       - name: Container logs
         if: failure()
         run: docker compose logs

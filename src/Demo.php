@@ -28,4 +28,57 @@ final class Demo
             && $email !== null
             && in_array(strtolower(trim($email)), self::ACCOUNTS, true);
     }
+
+    /** Upload sub-folders the app writes into; they are emptied, not removed. */
+    public const UPLOAD_DIRS = ['avatars', 'disease_checks'];
+
+    /**
+     * Delete everything visitors uploaded under $dir, keeping $dir/.htaccess
+     * (blocks script execution) and the empty UPLOAD_DIRS folders.
+     *
+     * @return int number of files deleted
+     */
+    public static function clearUploads(string $dir): int
+    {
+        $deleted = 0;
+        foreach (new \FilesystemIterator($dir) as $entry) {
+            /** @var \SplFileInfo $entry */
+            $name = $entry->getFilename();
+            if ($name === '.htaccess' && $entry->isFile()) {
+                continue;
+            }
+            if ($entry->isDir() && !$entry->isLink()) {
+                $deleted += self::removeTree($entry->getPathname(), !in_array($name, self::UPLOAD_DIRS, true));
+            } elseif (unlink($entry->getPathname())) {
+                $deleted++;
+            }
+        }
+        foreach (self::UPLOAD_DIRS as $sub) {
+            if (!is_dir("{$dir}/{$sub}")) {
+                mkdir("{$dir}/{$sub}", 0775, true);
+            }
+        }
+        return $deleted;
+    }
+
+    private static function removeTree(string $dir, bool $removeSelf): int
+    {
+        $deleted = 0;
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($items as $item) {
+            /** @var \SplFileInfo $item */
+            if ($item->isDir() && !$item->isLink()) {
+                rmdir($item->getPathname());
+            } elseif (unlink($item->getPathname())) {
+                $deleted++;
+            }
+        }
+        if ($removeSelf) {
+            rmdir($dir);
+        }
+        return $deleted;
+    }
 }
