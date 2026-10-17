@@ -284,6 +284,11 @@ function mailConfigured(): bool
     return !empty($_ENV['SMTP_USER']) && !empty($_ENV['SMTP_PASS']);
 }
 
+function googleOAuthConfigured(): bool
+{
+    return !empty($_ENV['GOOGLE_CLIENT_ID']) && !empty($_ENV['GOOGLE_CLIENT_SECRET']);
+}
+
 function sendEmail(string $to, string $toName, string $subject, string $htmlBody, string $altBody = ''): bool
 {
     if (!mailConfigured()) {

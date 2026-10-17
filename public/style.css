@@ -230,3 +230,8 @@ body {
 .star-input label:hover,
 .star-input label:hover ~ label { color: #ffc107; }
 .star-input input:focus-visible + label { outline: 2px solid #198754; border-radius: 4px; }
+
+/* Role picker on the registration form (radio + card label) */
+.role-card { cursor: pointer; border-width: 2px; }
+.btn-check:checked + .role-card { border-color: #198754; background-color: rgba(25,135,84,.1); }
+.btn-check:focus-visible + .role-card { outline: 3px solid rgba(25,135,84,.5); outline-offset: 2px; }
