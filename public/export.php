@@ -1,8 +1,8 @@
 <?php
 use Dompdf\Dompdf;
 use Dompdf\Options;
-require_once 'includes/auth_check.php';
-require_once 'config.php';
+require_once __DIR__ . '/../includes/auth_check.php';
+require_once __DIR__ . '/../config.php';
 
 $db  = getDB();
 $uid = $_SESSION['user_id'];
@@ -45,7 +45,7 @@ if (isset($_GET['format']) && $_GET['format'] === 'pdf') {
     $stmt->execute([$uid]);
     $crops = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $autoload = __DIR__ . '/vendor/autoload.php';
+    $autoload = __DIR__ . '/../vendor/autoload.php';
     if (file_exists($autoload)) {
      require_once $autoload;
     }
@@ -157,9 +157,9 @@ if (isset($_GET['format']) && $_GET['format'] === 'pdf') {
 
 // ─── Export Page (HTML) ───────────────────────────────────────────────────────
 $pageTitle = 'Export Data';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 
-$dompdfAvailable = file_exists(__DIR__ . '/vendor/autoload.php');
+$dompdfAvailable = file_exists(__DIR__ . '/../vendor/autoload.php');
 
 $stmt = $db->prepare("SELECT COUNT(*) FROM crops WHERE user_id = ?");
 $stmt->execute([$uid]);
@@ -231,4 +231,4 @@ $totalCrops = $stmt->fetchColumn();
     </div>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -1,0 +1,13 @@
+# Only public/ is web-facing. When the project folder itself is the
+# document root (e.g. XAMPP htdocs/agri_app), route every request into
+# public/ so config.php, .env, migrations/ and tools/ are never served.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^$ public/ [L]
+    RewriteCond %{REQUEST_URI} !/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

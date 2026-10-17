@@ -3,7 +3,7 @@
  * AgriTrack – index.php
  * Public landing page. Redirects logged-in users to the dashboard.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');

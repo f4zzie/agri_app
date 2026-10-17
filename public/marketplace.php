@@ -3,7 +3,7 @@
  * AgriTrack – marketplace.php
  * Browse all farmers' listed products. Buyers can contact farmers.
  */
-require_once 'includes/auth_check.php';
+require_once __DIR__ . '/../includes/auth_check.php';
 $db        = getDB();
 $uid       = (int)$_SESSION['user_id'];
 $userRole  = $_SESSION['role'] ?? 'farmer';
@@ -67,7 +67,7 @@ $counties     = $countiesStmt->fetchAll(PDO::FETCH_COLUMN);
 
 $statusColors = ['planted'=>'primary','growing'=>'success','harvested'=>'warning','failed'=>'danger'];
 
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -199,4 +199,4 @@ require_once 'includes/header.php';
 <?php endif; ?>
 <?php endif; ?>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

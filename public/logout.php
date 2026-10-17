@@ -3,7 +3,7 @@
  * AgriTrack – logout.php
  * Logs activity, destroys the session, and redirects to login.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 if (isLoggedIn()) {
     log_activity((int) $_SESSION['user_id'], 'logout', 'User logged out');

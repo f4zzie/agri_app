@@ -343,7 +343,7 @@ $rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
         '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' .
         '</Relationships>';
 
-$docx_filename = __DIR__ . '/SCO_207_Group_Project_Report.docx';
+$docx_filename = __DIR__ . '/../SCO_207_Group_Project_Report.docx';
 
 $zip = new ZipArchive();
 if ($zip->open($docx_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {

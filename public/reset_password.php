@@ -3,7 +3,7 @@
  * AgriTrack – reset_password.php
  * Validates a reset token and lets the user set a new password.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');

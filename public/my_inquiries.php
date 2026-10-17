@@ -3,7 +3,7 @@
  * AgriTrack – my_inquiries.php
  * Farmers see received inquiries; Buyers see sent inquiries.
  */
-require_once 'includes/auth_check.php';
+require_once __DIR__ . '/../includes/auth_check.php';
 $db       = getDB();
 $uid      = (int)$_SESSION['user_id'];
 $userRole = $_SESSION['role'] ?? 'farmer';
@@ -89,7 +89,7 @@ $totalPages = max(1, (int)ceil($total / $perPage));
 $statusColors = ['pending' => 'warning', 'read' => 'info', 'responded' => 'success'];
 $statusLabels = ['pending' => '⏳ Pending', 'read' => '👁 Seen', 'responded' => '✅ Responded'];
 
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -285,4 +285,4 @@ require_once 'includes/header.php';
 </nav>
 <?php endif; ?>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

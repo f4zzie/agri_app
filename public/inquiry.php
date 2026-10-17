@@ -3,7 +3,7 @@
  * AgriTrack – inquiry.php
  * Buyer sends an inquiry to a farmer about a specific product.
  */
-require_once 'includes/auth_check.php';
+require_once __DIR__ . '/../includes/auth_check.php';
 $db       = getDB();
 $uid      = (int)$_SESSION['user_id'];
 $userRole = $_SESSION['role'] ?? 'farmer';
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Contact Farmer';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="row justify-content-center">
@@ -175,4 +175,4 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

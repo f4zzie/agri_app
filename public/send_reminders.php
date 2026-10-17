@@ -1,9 +1,9 @@
 <?php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-require_once 'includes/auth_check.php';
+require_once __DIR__ . '/../includes/auth_check.php';
 $pageTitle = 'Harvest Reminders';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 
 $db  = getDB();
 $uid = $_SESSION['user_id'];
@@ -27,7 +27,7 @@ $successMsg  = flash('success');
 $errorMsg    = flash('error');
 $remindersSent = false;
 $sentCrops   = [];
-$phpMailerAvailable = file_exists(__DIR__ . '/vendor/autoload.php');
+$phpMailerAvailable = file_exists(__DIR__ . '/../vendor/autoload.php');
 
 // ─── Handle POST: Send Reminders ─────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($phpMailerAvailable) {
         // Try to load PHPMailer
-        require_once __DIR__ . '/vendor/autoload.php';
+        require_once __DIR__ . '/../vendor/autoload.php';
 
         if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
             
@@ -255,4 +255,4 @@ $successMsg = flash('success');
     </div>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

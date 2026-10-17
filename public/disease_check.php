@@ -1,7 +1,7 @@
 <?php
-require_once 'includes/auth_check.php';
+require_once __DIR__ . '/../includes/auth_check.php';
 $pageTitle = 'Disease Check';
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 
 $db  = getDB();
 $uid = $_SESSION['user_id'];
@@ -180,4 +180,4 @@ function previewLeaf(event) {
 }
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

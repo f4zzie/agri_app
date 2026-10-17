@@ -7,7 +7,7 @@
  *   Step 1 – ?action=login  → redirect browser to Google
  *   Step 2 – ?code=...      → exchange code, fetch user info, create/login user
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');

@@ -3,7 +3,7 @@
  * AgriTrack – login.php
  * Handles user authentication with rate limiting and Google OAuth link.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');

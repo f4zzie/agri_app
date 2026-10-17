@@ -3,7 +3,7 @@
  * AgriTrack – register.php
  * New user registration with email verification.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');

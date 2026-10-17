@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/auth_check.php';
+require_once __DIR__ . '/../includes/auth_check.php';
 $pageTitle = 'Dashboard';
 
 $db       = getDB();
@@ -69,7 +69,7 @@ if ($role === 'farmer') {
     $myRecentInq = $myInqStmt->fetchAll();
 }
 
-require_once 'includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 
 $statusBadge = ['available'=>'success','out_of_stock'=>'secondary','planted'=>'primary','growing'=>'success','harvested'=>'warning','failed'=>'danger'];
 ?>
@@ -81,7 +81,7 @@ $statusBadge = ['available'=>'success','out_of_stock'=>'secondary','planted'=>'p
 
     <!-- Hero Banner -->
     <div class="dash-hero mb-4" style="
-        background: url('assets/farm_hero_bg.png') center center / cover no-repeat;
+        background: url('assets/farm_hero_bg.jpg') center center / cover no-repeat;
         border-radius: 16px;
         overflow: hidden;
         position: relative;
@@ -286,7 +286,7 @@ $statusBadge = ['available'=>'success','out_of_stock'=>'secondary','planted'=>'p
 
     <!-- Hero Banner (buyer) -->
     <div class="dash-hero mb-4" style="
-        background: url('assets/farm_hero_bg.png') center 60% / cover no-repeat;
+        background: url('assets/farm_hero_bg.jpg') center 60% / cover no-repeat;
         border-radius: 16px;
         overflow: hidden;
         position: relative;
@@ -458,4 +458,4 @@ document.querySelectorAll('.delete-btn').forEach(function(btn) {
 });
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

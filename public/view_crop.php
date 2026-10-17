@@ -1,5 +1,5 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/../config.php';
 
 $cropId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 

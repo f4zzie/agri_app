@@ -3,7 +3,7 @@
  * AgriTrack – verify.php
  * Handles email address verification via token link.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 $token = trim($_GET['token'] ?? '');
 

@@ -3,7 +3,7 @@
  * AgriTrack – forgot_password.php
  * Allows users to request a password reset email.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             // --- Send reset email if PHPMailer is available ---
-            $vendorAutoload = __DIR__ . '/vendor/autoload.php';
+            $vendorAutoload = __DIR__ . '/../vendor/autoload.php';
             if (file_exists($vendorAutoload)) {
                 require_once $vendorAutoload;
             }
