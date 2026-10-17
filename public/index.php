@@ -30,6 +30,10 @@ $demo        = ($_ENV['DEMO_MODE'] ?? '') === '1';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#198754">
+    <link rel="icon" href="assets/favicon-32.png" sizes="32x32">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
 <body>
 
@@ -111,5 +115,6 @@ $demo        = ($_ENV['DEMO_MODE'] ?? '') === '1';
     <?= t('powered_by') ?> · SCO 207
 </footer>
 
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>

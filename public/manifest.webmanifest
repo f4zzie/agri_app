@@ -1,0 +1,20 @@
+{
+  "name": "AgriTrack – Farmer to Business Marketplace",
+  "short_name": "AgriTrack",
+  "description": "Kenyan farmers list produce and talk directly to business buyers.",
+  "start_url": "dashboard.php?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#198754",
+  "lang": "en",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "List a product", "url": "add_crop.php", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Marketplace", "url": "marketplace.php", "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

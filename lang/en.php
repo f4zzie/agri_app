@@ -422,4 +422,10 @@ return [
     'whatsapp'                 => 'WhatsApp',
     'wa_about'                 => 'Hello, I saw your %s on AgriTrack.',
     'wa_hello_farmer'          => 'Hello, I found you on AgriTrack.',
+
+    // ── Offline drafts ────────────────────────────────────────────────────────
+    'draft_offline_saved'      => 'You are offline. Your listing is saved on this device and will be restored when you reconnect.',
+    'draft_restored'           => 'We restored a listing you started earlier. Check it and submit.',
+    'draft_back_online'        => 'You\'re back online. Reload to submit your saved listing.',
+    'reload'                   => 'Reload',
 ];

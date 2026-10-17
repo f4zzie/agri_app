@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline | AgriTrack</title>
+    <meta name="theme-color" content="#198754">
+    <style>
+        body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f8f9fa; color: #212529;
+               min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
+        .card { background: #fff; max-width: 420px; padding: 32px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); text-align: center; }
+        h1 { color: #198754; font-size: 1.4rem; margin: .5rem 0; }
+        p { color: #6c757d; line-height: 1.5; }
+        button { background: #198754; color: #fff; border: 0; border-radius: 6px; padding: 10px 20px; font-size: 1rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="assets/icon-192.png" alt="" width="64" height="64">
+        <h1>You're offline · Hauko mtandaoni</h1>
+        <p>AgriTrack needs a connection for this page. Listings you were writing are saved on this phone and will be restored when you reconnect.</p>
+        <p lang="sw">Bidhaa uliyokuwa ukiandika imehifadhiwa kwenye simu hii na itarejeshwa ukiunganishwa tena.</p>
+        <button type="button" onclick="location.reload()">Try again · Jaribu tena</button>
+    </div>
+</body>
+</html>

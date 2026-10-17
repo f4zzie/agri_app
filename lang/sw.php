@@ -421,4 +421,10 @@ return [
     'whatsapp'                 => 'WhatsApp',
     'wa_about'                 => 'Habari, nimeona %s yako kwenye AgriTrack.',
     'wa_hello_farmer'          => 'Habari, nimekupata kwenye AgriTrack.',
+
+    // ── Offline drafts ────────────────────────────────────────────────────────
+    'draft_offline_saved'      => 'Hauko mtandaoni. Bidhaa yako imehifadhiwa kwenye kifaa hiki na itarejeshwa ukiunganishwa tena.',
+    'draft_restored'           => 'Tumerejesha bidhaa uliyoanza kuandika awali. Ikague kisha uwasilishe.',
+    'draft_back_online'        => 'Umerudi mtandaoni. Pakia upya ukurasa ili uwasilishe bidhaa uliyohifadhi.',
+    'reload'                   => 'Pakia upya',
 ];

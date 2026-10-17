@@ -41,6 +41,10 @@ $activePage = $activeFor[$currentPage] ?? $currentPage;
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="<?= $root ?>style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#198754">
+    <link rel="icon" href="assets/favicon-32.png" sizes="32x32">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 </head>
 <body class="bg-light">
 <a class="visually-hidden-focusable position-absolute top-0 start-0 m-2 btn btn-light" href="#main"><?= t('skip_to_content') ?></a>

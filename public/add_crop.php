@@ -71,9 +71,13 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             <?php endif; ?>
 
-            <div id="offlineNotice" class="alert alert-warning d-none" role="status"></div>
+            <div id="offlineNotice" class="alert alert-warning d-none" role="status" aria-live="polite"
+                 data-offline-saved="<?= e(t('draft_offline_saved')) ?>"
+                 data-restored="<?= e(t('draft_restored')) ?>"
+                 data-back-online="<?= e(t('draft_back_online')) ?>"
+                 data-reload-label="<?= e(t('reload')) ?>"></div>
 
-            <form method="POST" enctype="multipart/form-data" novalidate id="cropForm" data-draft-key="agritrack:add_crop">
+            <form method="POST" enctype="multipart/form-data" novalidate id="cropForm" data-draft-key="agritrack:add_crop:<?= $uid ?>">
                 <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
                 <?php require __DIR__ . '/../includes/crop_form.php'; ?>
