@@ -5,6 +5,18 @@
  */
 
 // ---------------------------------------------------------------------------
+// 0. Autoload App\ classes from src/ (works with or without Composer)
+// ---------------------------------------------------------------------------
+spl_autoload_register(static function (string $class): void {
+    if (str_starts_with($class, 'App\\')) {
+        $file = __DIR__ . '/src/' . str_replace('\\', '/', substr($class, 4)) . '.php';
+        if (is_file($file)) {
+            require $file;
+        }
+    }
+});
+
+// ---------------------------------------------------------------------------
 // 1. loadEnv() – parse .env file and populate $_ENV
 // ---------------------------------------------------------------------------
 function loadEnv(string $path): void
@@ -42,6 +54,12 @@ function loadEnv(string $path): void
             $value = substr($value, 1, -1);
         }
 
+        // A real environment variable (e.g. set by Docker) wins over .env
+        if (getenv($key) !== false) {
+            $_ENV[$key] = getenv($key);
+            continue;
+        }
+
         $_ENV[$key] = $value;
         putenv("$key=$value");
     }
@@ -50,6 +68,28 @@ function loadEnv(string $path): void
 // ---------------------------------------------------------------------------
 // 2. getDB() – return a singleton PDO connection
 // ---------------------------------------------------------------------------
+function pdoOptions(): array
+{
+    return [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ];
+}
+
+function serverDsn(): string
+{
+    $host = $_ENV['DB_HOST'] ?? 'localhost';
+    $port = (int) ($_ENV['DB_PORT'] ?? 3306);
+    return "mysql:host={$host};port={$port};charset=utf8mb4";
+}
+
+/** Connection to the MySQL server without selecting a database (used by bin/ scripts). */
+function getServerConnection(): PDO
+{
+    return new PDO(serverDsn(), $_ENV['DB_USER'] ?? 'root', $_ENV['DB_PASS'] ?? '', pdoOptions());
+}
+
 function getDB(): PDO
 {
     static $pdo = null;
@@ -58,24 +98,16 @@ function getDB(): PDO
         return $pdo;
     }
 
-    $host    = $_ENV['DB_HOST'] ?? 'localhost';
-    $dbname  = $_ENV['DB_NAME'] ?? 'agri_app';
-    $user    = $_ENV['DB_USER'] ?? 'root';
-    $pass    = $_ENV['DB_PASS'] ?? '';
-    $charset = 'utf8mb4';
-
-    $dsn = "mysql:host={$host};dbname={$dbname};charset={$charset}";
-    $options = [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ];
+    $dsn = serverDsn() . ';dbname=' . ($_ENV['DB_NAME'] ?? 'agri_app');
 
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        $pdo = new PDO($dsn, $_ENV['DB_USER'] ?? 'root', $_ENV['DB_PASS'] ?? '', pdoOptions());
     } catch (PDOException $e) {
         // In production, do not expose the message
         error_log('DB Connection failed: ' . $e->getMessage());
+        if (PHP_SAPI === 'cli') {
+            throw $e;
+        }
         die('<div style="font-family:sans-serif;color:red;padding:20px;">
                <strong>Database connection failed.</strong> Please check your .env file.
              </div>');
@@ -85,13 +117,26 @@ function getDB(): PDO
 }
 
 // ---------------------------------------------------------------------------
+// 2b. ensure_session() – start the session for web requests. Under the CLI
+//     (migrations, seeding, tests) $_SESSION is a plain array instead.
+// ---------------------------------------------------------------------------
+function ensure_session(): void
+{
+    if (PHP_SAPI === 'cli') {
+        $_SESSION ??= [];
+        return;
+    }
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
+// ---------------------------------------------------------------------------
 // 3. setLang() – determine active language and store in session
 // ---------------------------------------------------------------------------
 function setLang(): void
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
 
     $allowed = ['en', 'sw'];
 
@@ -109,23 +154,43 @@ function setLang(): void
 // ---------------------------------------------------------------------------
 function t(string $key): string
 {
-    static $strings = null;
+    static $strings = [];
 
-    if ($strings === null) {
-        $lang    = $_SESSION['lang'] ?? 'en';
-        $file    = __DIR__ . "/lang/{$lang}.php";
-        $fallback = __DIR__ . '/lang/en.php';
-
-        if (file_exists($file)) {
-            $strings = require $file;
-        } elseif (file_exists($fallback)) {
-            $strings = require $fallback;
-        } else {
-            $strings = [];
-        }
+    $lang = $_SESSION['lang'] ?? 'en';
+    if (!isset($strings[$lang])) {
+        $file = __DIR__ . "/lang/{$lang}.php";
+        $strings[$lang] = is_file($file) ? require $file : require __DIR__ . '/lang/en.php';
     }
 
-    return $strings[$key] ?? $key;
+    return $strings[$lang][$key] ?? $key;
+}
+
+// ---------------------------------------------------------------------------
+// 4b. lang_url() – link to the current page in another language,
+//     keeping the existing query string (e.g. ?id=5)
+// ---------------------------------------------------------------------------
+function lang_url(string $lang): string
+{
+    $query = $_GET;
+    $query['lang'] = $lang;
+    return '?' . htmlspecialchars(http_build_query($query), ENT_QUOTES);
+}
+
+// ---------------------------------------------------------------------------
+// 4c. counties() / categories() – reference data, id => name
+// ---------------------------------------------------------------------------
+function counties(): array
+{
+    static $rows = null;
+    return $rows ??= getDB()->query('SELECT id, name FROM counties ORDER BY name')
+                            ->fetchAll(PDO::FETCH_KEY_PAIR);
+}
+
+function categories(): array
+{
+    static $rows = null;
+    return $rows ??= getDB()->query('SELECT id, name FROM categories ORDER BY id')
+                            ->fetchAll(PDO::FETCH_KEY_PAIR);
 }
 
 // ---------------------------------------------------------------------------
@@ -133,9 +198,7 @@ function t(string $key): string
 // ---------------------------------------------------------------------------
 function csrf_token(): string
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
 
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -147,12 +210,15 @@ function csrf_token(): string
 // ---------------------------------------------------------------------------
 // 6. csrf_verify() – verify CSRF token from POST, die on mismatch
 // ---------------------------------------------------------------------------
+function csrf_is_valid(mixed $posted): bool
+{
+    $stored = $_SESSION['csrf_token'] ?? '';
+    return is_string($posted) && $stored !== '' && hash_equals($stored, $posted);
+}
+
 function csrf_verify(): void
 {
-    $posted = $_POST['csrf_token'] ?? '';
-    $stored = $_SESSION['csrf_token'] ?? '';
-
-    if (!hash_equals($stored, $posted)) {
+    if (!csrf_is_valid($_POST['csrf_token'] ?? null)) {
         http_response_code(403);
         die('<div style="font-family:sans-serif;padding:20px;color:red;">
                <strong>403 – Invalid CSRF token.</strong> Please go back and try again.
@@ -189,9 +255,7 @@ function log_activity(int $user_id, string $action, string $details = ''): void
 // ---------------------------------------------------------------------------
 function flash(string $key, ?string $msg = null): ?string
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
 
     if ($msg !== null) {
         // Setter
@@ -210,17 +274,48 @@ function flash(string $key, ?string $msg = null): ?string
 // ---------------------------------------------------------------------------
 function isLoggedIn(): bool
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+// ---------------------------------------------------------------------------
+// 9b. login_user() – start an authenticated session for a user row
+// ---------------------------------------------------------------------------
+function login_user(array $user): void
+{
+    session_regenerate_id(true); // new id on privilege change: prevents session fixation
+    $_SESSION['user_id'] = (int) $user['id'];
+    $_SESSION['name']    = $user['name'];
+    $_SESSION['email']   = $user['email'];
+    $_SESSION['role']    = $user['role'] ?? 'farmer';
 }
 
 // ---------------------------------------------------------------------------
 // 10. sendEmail() – send HTML email via PHPMailer (requires composer install)
 // ---------------------------------------------------------------------------
+function mailConfigured(): bool
+{
+    return !empty($_ENV['SMTP_USER']) && !empty($_ENV['SMTP_PASS']);
+}
+
+function googleOAuthConfigured(): bool
+{
+    return !empty($_ENV['GOOGLE_CLIENT_ID']) && !empty($_ENV['GOOGLE_CLIENT_SECRET']);
+}
+
+/** Send an SMS if Africa's Talking is configured; silently skipped otherwise. */
+function sendSms(?string $phone, string $message): bool
+{
+    $sms = App\Sms::fromEnv();
+    return $sms !== null && $phone !== null && $phone !== '' && $sms->send($phone, $message);
+}
+
 function sendEmail(string $to, string $toName, string $subject, string $htmlBody, string $altBody = ''): bool
 {
+    if (!mailConfigured()) {
+        return false;
+    }
+
     $vendorAutoload = __DIR__ . '/vendor/autoload.php';
     if (!file_exists($vendorAutoload)) {
         error_log('AgriTrack sendEmail: vendor/autoload.php not found – run composer install');
@@ -261,15 +356,38 @@ function sendEmail(string $to, string $toName, string $subject, string $htmlBody
     }
 }
 
+require_once __DIR__ . '/includes/helpers.php';
+
 // ---------------------------------------------------------------------------
 // Auto-initialisation
 // ---------------------------------------------------------------------------
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Load environment variables from .env (same directory as config.php).
+// Real environment variables (e.g. from Docker) take precedence.
+loadEnv(__DIR__ . '/.env');
+foreach (getenv() as $envKey => $envValue) {
+    if (!isset($_ENV[$envKey])) {
+        $_ENV[$envKey] = $envValue;
+    }
 }
 
-// Load environment variables from .env (same directory as config.php)
-loadEnv(__DIR__ . '/.env');
+if (PHP_SAPI !== 'cli') {
+    $https = ($_SERVER['HTTPS'] ?? '') === 'on' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
 
-// Set active language
-setLang();
+    // Baseline security headers for every page
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: DENY');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+
+    if (session_status() === PHP_SESSION_NONE) {
+        ini_set('session.use_strict_mode', '1');
+        session_set_cookie_params([
+            'httponly' => true,   // not readable from JavaScript
+            'samesite' => 'Lax',  // not sent on cross-site POSTs
+            'secure'   => $https,
+        ]);
+        session_start();
+    }
+    // Set active language
+    setLang();
+}

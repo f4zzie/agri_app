@@ -5,7 +5,8 @@
 /vendor/
 
 # === Uploaded files (not part of source code) ===
-/uploads/
+/public/uploads/*
+!/public/uploads/.htaccess
 
 # === OS & editor junk ===
 .DS_Store
@@ -13,3 +14,10 @@ Thumbs.db
 *.log
 .idea/
 .vscode/
+
+# === Generated report ===
+/SCO_207_Group_Project_Report.docx
+
+# === Tooling caches ===
+/.phpunit.cache/
+/.phpstan.cache/

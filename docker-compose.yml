@@ -1,0 +1,44 @@
+# One-command local run:  docker compose up --build   ->  http://localhost:8080
+# Demo logins (seeded): farmer@agritrack.test / buyer@agritrack.test, password Demo@1234
+services:
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: agri_app
+      DB_USER: agritrack
+      DB_PASS: agritrack_secret
+      APP_URL: http://localhost:8080
+      DEMO_MODE: "1"
+      SEED_DEMO_DATA: "1"
+      # Optional: SMTP_*, GOOGLE_*, AT_* – see .env.example
+    volumes:
+      - uploads:/var/www/html/public/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: agri_app
+      MARIADB_USER: agritrack
+      MARIADB_PASSWORD: agritrack_secret
+      MARIADB_ROOT_PASSWORD: root_secret
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads:
