@@ -1,0 +1,21 @@
+parameters:
+    level: 5
+    paths:
+        - src
+        - bin
+        - config.php
+        - includes
+        - public
+        - tools/explain_demo.php
+    tmpDir: .phpstan.cache
+    ignoreErrors:
+        # Partials receive their inputs from the including page ($form is set
+        # by add_crop.php / edit_crop.php before require).
+        -
+            identifier: variable.undefined
+            path: includes/crop_form.php
+        # The dashboard defines one set of variables per role in an if/else and
+        # renders the matching branch; PHPStan can't correlate the two branches.
+        -
+            identifier: variable.undefined
+            path: public/dashboard.php

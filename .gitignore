@@ -17,3 +17,7 @@ Thumbs.db
 
 # === Generated report ===
 /SCO_207_Group_Project_Report.docx
+
+# === Tooling caches ===
+/.phpunit.cache/
+/.phpstan.cache/

@@ -125,7 +125,7 @@ foreach ($farmerNames as $i => $name) {
 }
 $buyerIds = [];
 foreach ($buyers as [$name, $email, $countyName, $business]) {
-    $email ??= strtolower(explode(' ', $name)[0]) . '@' . strtolower(preg_replace('/[^a-z]/i', '', $business)) . '.co.ke';
+    $email ??= strtolower(explode(' ', $name)[0]) . '@' . strtolower(str_replace(' ', '', $business)) . '.co.ke';
     $insUser->execute(["{$name} ({$business})", $email, $hash, 'buyer', $phone(), $county[$countyName], $daysAgo(mt_rand(100, 300))]);
     $buyerIds[] = (int) $db->lastInsertId();
 }
