@@ -93,3 +93,10 @@ jobs:
           php bin/migrate.php --status
           php bin/seed.php
           php bin/seed.php --if-empty
+      - name: End-to-end smoke test over HTTP
+        env:
+          APP_URL: http://127.0.0.1:8080
+        run: |
+          php -d log_errors=1 -d display_errors=0 -d error_log=/tmp/agritrack.log -S 127.0.0.1:8080 -t public > /dev/null 2>&1 &
+          for i in $(seq 20); do curl -fs -o /dev/null http://127.0.0.1:8080/login.php && break; sleep 0.5; done
+          SERVER_LOG=/tmp/agritrack.log tests/smoke.sh http://127.0.0.1:8080
