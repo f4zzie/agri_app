@@ -295,3 +295,12 @@ tests/           Unit/, Integration/, smoke.sh
 docs/            EXPLAIN.md, screenshots/
 docker/          entrypoint and Apache config
 ```
+
+---
+
+## Limitations and roadmap
+
+- Disease check is not automated: it stores the photo and shows a guide; an image-recognition model could be added later.
+- No in-app payment: deals are paid outside the app; M-Pesa (Daraja) deposits are the natural next step.
+- SMS is unit-tested with a fake transport but has not been run against the live Africa's Talking API.
+- Product names are free text, so price trends group by lower-cased name; a product reference table would make trends more robust.
