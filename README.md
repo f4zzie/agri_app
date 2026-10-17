@@ -18,7 +18,7 @@ A normalised schema evolved through versioned migrations, with CHECK constraints
 
 ## Contents
 
-- [What I built](#what-i-built)
+- [Background](#background)
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Database design](#database-design)
@@ -29,9 +29,9 @@ A normalised schema evolved through versioned migrations, with CHECK constraints
 
 ---
 
-## What I built
+## Background
 
-agri_app is an agricultural application centered on farm-related data and workflows. It provides a simple interface for interacting with that information. The app is intended to make common agricultural tasks easier to carry out.
+AgriTrack started as a group project for a university Database Systems course. This repository extends it into a portfolio version: a schema built through versioned migrations with CHECK constraints, views, triggers and indexes measured with EXPLAIN; unit, integration and end-to-end tests running in CI; a Docker setup with an HTTPS production configuration; a complete Kiswahili translation; and a hardened public demo mode.
 
 ---
 
