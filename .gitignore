@@ -1,5 +1,6 @@
 # === Sensitive / personal files ===
 .env
+*.pem
 
 # === Composer dependencies (friends run "composer install" themselves) ===
 /vendor/
