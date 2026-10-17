@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+vendor/
+node_modules/
+public/uploads/*
+!public/uploads/.htaccess
+.phpunit.cache/
+.idea/
+.vscode/
+*.log
+SCO_207_Group_Project_Report.docx
+Dockerfile
+docker-compose.yml
+.dockerignore
