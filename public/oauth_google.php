@@ -21,53 +21,24 @@ $redirectUri  = $_ENV['GOOGLE_REDIRECT_URI']  ?? '';
 // ------------------------------------------------------------------
 // If Google credentials are not configured, show setup instructions
 // ------------------------------------------------------------------
-if (empty($clientId) || empty($clientSecret)) {
-    $currentLang = $_SESSION['lang'] ?? 'en';
+if (!googleOAuthConfigured()) {
+    $pageTitle = t('google_not_configured');
+    require __DIR__ . '/../includes/auth_header.php';
     ?>
-    <!DOCTYPE html>
-    <html lang="<?= $currentLang ?>">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Google OAuth Setup | <?= t('app_name') ?></title>
-        <link rel="stylesheet"
-              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-    <div class="auth-wrapper">
-        <div class="auth-card card shadow p-4">
-            <div class="text-center mb-3">
-                <span style="font-size:2rem;">🌿</span>
-                <h1 class="h4 fw-bold text-success"><?= t('app_name') ?></h1>
-            </div>
-
-            <div class="alert alert-warning" role="alert">
-                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Google OAuth Not Configured</h5>
-                <p>To enable Google login, follow these steps:</p>
-                <ol class="mb-0 small">
-                    <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a></li>
-                    <li>Create a new project (or select an existing one).</li>
-                    <li>Enable the <strong>Google+ API</strong> or <strong>OAuth 2.0</strong> under APIs &amp; Services.</li>
-                    <li>Go to <strong>Credentials</strong> → <strong>Create Credentials</strong> → <strong>OAuth Client ID</strong>.</li>
-                    <li>Set Application type to <strong>Web application</strong>.</li>
-                    <li>Add your redirect URI: <code><?= htmlspecialchars($redirectUri ?: 'http://localhost/agri_app/oauth_google.php') ?></code></li>
-                    <li>Copy the <strong>Client ID</strong> and <strong>Client Secret</strong>.</li>
-                    <li>Paste them into your <code>.env</code> file as <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code>.</li>
-                </ol>
-            </div>
-
-            <div class="text-center">
-                <a href="login.php" class="btn btn-outline-success">
-                    <i class="bi bi-arrow-left me-1"></i>Back to Login
-                </a>
-            </div>
-        </div>
+    <div class="alert alert-warning" role="alert">
+        <p class="mb-2"><?= t('google_setup_intro') ?></p>
+        <ol class="mb-0 small">
+            <li><?= t('google_setup_1') ?> <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a></li>
+            <li><?= t('google_setup_2') ?></li>
+            <li><?= t('google_setup_3') ?> <code><?= e($redirectUri ?: 'http://localhost/agri_app/oauth_google.php') ?></code></li>
+            <li><?= t('google_setup_4') ?></li>
+        </ol>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
-    </html>
+    <div class="text-center">
+        <a href="login.php" class="btn btn-outline-success"><i class="bi bi-arrow-left me-1"></i><?= t('back_to_login') ?></a>
+    </div>
     <?php
+    require __DIR__ . '/../includes/auth_footer.php';
     exit;
 }
 
@@ -109,7 +80,7 @@ if (isset($_GET['code'])) {
     $storedState   = $_SESSION['oauth_state'] ?? '';
 
     if (!hash_equals($storedState, $returnedState)) {
-        flash('danger', 'Invalid OAuth state. Please try again.');
+        flash('danger', t('google_auth_failed'));
         header('Location: login.php');
         exit;
     }
@@ -140,7 +111,7 @@ if (isset($_GET['code'])) {
     $tokenResponse = @file_get_contents($tokenUrl, false, $tokenContext);
 
     if ($tokenResponse === false) {
-        flash('danger', 'Failed to connect to Google. Please try again later.');
+        flash('danger', t('google_auth_failed'));
         header('Location: login.php');
         exit;
     }
@@ -149,7 +120,7 @@ if (isset($_GET['code'])) {
 
     if (empty($tokenJson['access_token'])) {
         error_log('Google OAuth token error: ' . $tokenResponse);
-        flash('danger', 'Google authentication failed. Please try again.');
+        flash('danger', t('google_auth_failed'));
         header('Location: login.php');
         exit;
     }
@@ -172,7 +143,7 @@ if (isset($_GET['code'])) {
     );
 
     if ($userInfoResponse === false) {
-        flash('danger', 'Could not retrieve your Google profile. Please try again.');
+        flash('danger', t('google_auth_failed'));
         header('Location: login.php');
         exit;
     }
@@ -180,7 +151,7 @@ if (isset($_GET['code'])) {
     $googleUser = json_decode($userInfoResponse, true);
 
     if (empty($googleUser['email'])) {
-        flash('danger', 'Could not retrieve email from Google. Please try again.');
+        flash('danger', t('google_auth_failed'));
         header('Location: login.php');
         exit;
     }
@@ -246,6 +217,6 @@ if (isset($_GET['code'])) {
 }
 
 // If we reach here, it's an unexpected state — send back to login
-flash('danger', 'Unexpected OAuth error. Please try again.');
+flash('danger', t('google_auth_failed'));
 header('Location: login.php');
 exit;

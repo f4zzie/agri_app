@@ -239,3 +239,18 @@ body {
 .role-card { cursor: pointer; border-width: 2px; }
 .btn-check:checked + .role-card { border-color: #198754; background-color: rgba(25,135,84,.1); }
 .btn-check:focus-visible + .role-card { outline: 3px solid rgba(25,135,84,.5); outline-offset: 2px; }
+
+/* ---------- Print: only the page content (e.g. QR labels) ---------- */
+@media print {
+    .app-navbar, #sidebar, .no-print, .flash-alert { display: none !important; }
+    main { padding: 0 !important; }
+    .card { box-shadow: none !important; border: 0 !important; }
+    .qr-label { box-shadow: none !important; }
+}
+
+/* ---------- Landing page ---------- */
+.landing-hero {
+    background:
+        linear-gradient(135deg, rgba(10,50,20,.88) 35%, rgba(20,80,40,.55)),
+        url('assets/farm_hero_bg.jpg') center / cover no-repeat;
+}
