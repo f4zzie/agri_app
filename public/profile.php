@@ -27,29 +27,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'profi
 
     $newAvatar = $user['avatar'];
 
-    if (!empty($_FILES['avatar']['name'])) {
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        $fileType = mime_content_type($_FILES['avatar']['tmp_name']);
-        if (!in_array($fileType, $allowedTypes)) {
-            $profileErrors[] = 'Avatar must be a JPEG, PNG, or GIF image.';
-        } elseif ($_FILES['avatar']['size'] > 2 * 1024 * 1024) {
-            $profileErrors[] = 'Avatar must be smaller than 2 MB.';
+    if (empty($profileErrors) && \App\Upload::wasSubmitted($_FILES['avatar'] ?? null)) {
+        $avatarDir = __DIR__ . '/uploads/avatars/';
+        $up = \App\Upload::storeImage($_FILES['avatar'], $avatarDir, 'avatar_', 2 * 1024 * 1024);
+        if ($up['ok']) {
+            // Delete old avatar if it exists
+            if (\App\Upload::isSafeStoredName($user['avatar']) && is_file($avatarDir . $user['avatar'])) {
+                unlink($avatarDir . $user['avatar']);
+            }
+            $newAvatar = $up['filename'];
         } else {
-            $ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
-            $avatarFilename = uniqid('avatar_', true) . '.' . strtolower($ext);
-            $avatarDir = __DIR__ . '/uploads/avatars/';
-            if (!is_dir($avatarDir)) {
-                mkdir($avatarDir, 0755, true);
-            }
-            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $avatarDir . $avatarFilename)) {
-                // Delete old avatar if it exists
-                if (!empty($user['avatar']) && file_exists($avatarDir . $user['avatar'])) {
-                    unlink($avatarDir . $user['avatar']);
-                }
-                $newAvatar = $avatarFilename;
-            } else {
-                $profileErrors[] = 'Failed to upload avatar. Please try again.';
-            }
+            $profileErrors[] = t($up['error']);
         }
     }
 

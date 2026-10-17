@@ -13,30 +13,16 @@ $resultShown   = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
 
-    if (empty($_FILES['leaf_image']['name'])) {
+    if (!\App\Upload::wasSubmitted($_FILES['leaf_image'] ?? null)) {
         $errors[] = 'Please select a leaf image to upload.';
     } else {
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $fileType = mime_content_type($_FILES['leaf_image']['tmp_name']);
-
-        if (!in_array($fileType, $allowedTypes)) {
-            $errors[] = 'Only JPEG, PNG, GIF, or WebP images are accepted.';
-        } elseif ($_FILES['leaf_image']['size'] > 10 * 1024 * 1024) {
-            $errors[] = 'Image must be smaller than 10 MB.';
+        $up = \App\Upload::storeImage($_FILES['leaf_image'], __DIR__ . '/uploads/disease_checks/', 'disease_', 10 * 1024 * 1024);
+        if ($up['ok']) {
+            $uploadedImage = $up['filename'];
+            $resultShown   = true;
+            log_activity($uid, 'disease_check', 'Uploaded leaf image for disease check: ' . $uploadedImage);
         } else {
-            $ext = pathinfo($_FILES['leaf_image']['name'], PATHINFO_EXTENSION);
-            $filename = uniqid('disease_', true) . '.' . strtolower($ext);
-            $uploadDir = __DIR__ . '/uploads/disease_checks/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            if (move_uploaded_file($_FILES['leaf_image']['tmp_name'], $uploadDir . $filename)) {
-                $uploadedImage = $filename;
-                $resultShown   = true;
-                log_activity($uid, 'disease_check', 'Uploaded leaf image for disease check: ' . $filename);
-            } else {
-                $errors[] = 'Failed to upload image. Please try again.';
-            }
+            $errors[] = t($up['error']);
         }
     }
 }

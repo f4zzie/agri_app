@@ -93,4 +93,9 @@ return [
     'too_many_attempts'     => 'Too many login attempts. Please wait 15 minutes before trying again.',
     'email_sent'            => 'If that email exists in our system, you will receive an email shortly.',
     'email_verified'        => 'Your email has been verified. You can now log in.',
+
+    // Uploads
+    'upload_too_large'      => 'Uploaded file is too large.',
+    'upload_failed'         => 'The upload failed. Please try again.',
+    'upload_bad_type'       => 'Only JPEG, PNG, GIF or WebP images are allowed.',
 ];

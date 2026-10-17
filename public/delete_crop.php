@@ -32,7 +32,7 @@ if (!$crop) {
 }
 
 // Delete image file if it exists
-if (!empty($crop['image'])) {
+if (\App\Upload::isSafeStoredName($crop['image'])) {
     $imagePath = __DIR__ . '/uploads/' . $crop['image'];
     if (file_exists($imagePath)) {
         unlink($imagePath);

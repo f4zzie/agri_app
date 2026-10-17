@@ -5,6 +5,18 @@
  */
 
 // ---------------------------------------------------------------------------
+// 0. Autoload App\ classes from src/ (works with or without Composer)
+// ---------------------------------------------------------------------------
+spl_autoload_register(static function (string $class): void {
+    if (str_starts_with($class, 'App\\')) {
+        $file = __DIR__ . '/src/' . str_replace('\\', '/', substr($class, 4)) . '.php';
+        if (is_file($file)) {
+            require $file;
+        }
+    }
+});
+
+// ---------------------------------------------------------------------------
 // 1. loadEnv() – parse .env file and populate $_ENV
 // ---------------------------------------------------------------------------
 function loadEnv(string $path): void

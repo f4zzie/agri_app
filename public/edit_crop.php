@@ -54,24 +54,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($formData['status'], ['available','out_of_stock'])) $formData['status'] = 'available';
 
     $newImage = $crop['image'];
-    if (!empty($_FILES['image']['name'])) {
-        $allowedTypes = ['image/jpeg','image/png','image/gif','image/webp'];
-        $fileType     = mime_content_type($_FILES['image']['tmp_name']);
-        if (!in_array($fileType, $allowedTypes)) {
-            $errors[] = 'Only JPEG, PNG, GIF or WebP allowed.';
-        } elseif ($_FILES['image']['size'] > 5 * 1024 * 1024) {
-            $errors[] = 'Image must be smaller than 5 MB.';
-        } else {
-            $ext      = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $filename = uniqid('prod_', true) . '.' . $ext;
-            $uploadDir = __DIR__ . '/uploads/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
-                if ($crop['image'] && file_exists($uploadDir . $crop['image'])) unlink($uploadDir . $crop['image']);
-                $newImage = $filename;
-            } else {
-                $errors[] = 'Failed to upload image.';
+    if (empty($errors) && \App\Upload::wasSubmitted($_FILES['image'] ?? null)) {
+        $uploadDir = __DIR__ . '/uploads/';
+        $up = \App\Upload::storeImage($_FILES['image'], $uploadDir, 'prod_', 5 * 1024 * 1024);
+        if ($up['ok']) {
+            if (\App\Upload::isSafeStoredName($crop['image']) && is_file($uploadDir . $crop['image'])) {
+                unlink($uploadDir . $crop['image']);
             }
+            $newImage = $up['filename'];
+        } else {
+            $errors[] = t($up['error']);
         }
     }
 

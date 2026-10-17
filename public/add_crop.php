@@ -32,22 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Image upload
     $imageFilename = null;
-    if (!empty($_FILES['image']['name'])) {
-        $allowedTypes = ['image/jpeg','image/png','image/gif','image/webp'];
-        $fileType     = mime_content_type($_FILES['image']['tmp_name']);
-        if (!in_array($fileType, $allowedTypes)) {
-            $errors[] = 'Only JPEG, PNG, GIF or WebP images allowed.';
-        } elseif ($_FILES['image']['size'] > 5 * 1024 * 1024) {
-            $errors[] = 'Image must be smaller than 5 MB.';
+    if (empty($errors) && \App\Upload::wasSubmitted($_FILES['image'] ?? null)) {
+        $up = \App\Upload::storeImage($_FILES['image'], __DIR__ . '/uploads/', 'prod_', 5 * 1024 * 1024);
+        if ($up['ok']) {
+            $imageFilename = $up['filename'];
         } else {
-            $ext           = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $imageFilename = uniqid('prod_', true) . '.' . $ext;
-            $uploadDir     = __DIR__ . '/uploads/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-            if (!move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $imageFilename)) {
-                $errors[] = 'Failed to upload image.';
-                $imageFilename = null;
-            }
+            $errors[] = t($up['error']);
         }
     }
 

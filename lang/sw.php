@@ -93,4 +93,9 @@ return [
     'too_many_attempts'     => 'Majaribio mengi sana ya kuingia. Tafadhali subiri dakika 15 kabla ya kujaribu tena.',
     'email_sent'            => 'Kama barua pepe hiyo ipo katika mfumo wetu, utapokea ujumbe hivi karibuni.',
     'email_verified'        => 'Barua pepe yako imethibitishwa. Sasa unaweza kuingia.',
+
+    // Uploads
+    'upload_too_large'      => 'Faili lililopakiwa ni kubwa mno.',
+    'upload_failed'         => 'Upakiaji umeshindwa. Tafadhali jaribu tena.',
+    'upload_bad_type'       => 'Picha za JPEG, PNG, GIF au WebP pekee ndizo zinazoruhusiwa.',
 ];
