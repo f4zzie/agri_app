@@ -1,6 +1,6 @@
 # Deploying a public demo on an Ubuntu VPS
 
-This sets up AgriTrack on a fresh Ubuntu 22.04 or 24.04 server, with HTTPS from [Caddy](https://caddyserver.com) and the database reset every night. With `DEMO_MODE=1` the demo logins are shown on the site and protected:
+This sets up AgriTrack on a fresh Ubuntu 22.04 or 24.04 server, with HTTPS from [Caddy](https://caddyserver.com) and the demo reset every 6 hours. With `DEMO_MODE=1` the demo logins are shown on the site and protected:
 
 - Their passwords can't be changed.
 - No real email or SMS is ever sent.
@@ -88,7 +88,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f caddy ap
 
 If the certificate fails, check that DNS points at this server and that ports 80 and 443 are open.
 
-## 6. Reset the demo every night
+## 6. Reset the demo every 6 hours
 
 `bin/reset_demo.php` does three things:
 
@@ -102,10 +102,10 @@ It refuses to run unless `DEMO_MODE=1`. To run it once by hand:
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php bin/reset_demo.php
 ```
 
-To schedule it, run `crontab -e` and add this line. It resets the demo at 03:00 server time. Use the full path to your clone.
+To schedule it, run `crontab -e` and add this line. It resets the demo every 6 hours, at 00:00, 06:00, 12:00 and 18:00 server time. Use the full path to your clone.
 
 ```cron
-0 3 * * * cd /home/ubuntu/agri_app && docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php bin/reset_demo.php >> /home/ubuntu/agritrack-reset.log 2>&1
+0 */6 * * * cd /home/ubuntu/agri_app && docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php bin/reset_demo.php >> /home/ubuntu/agritrack-reset.log 2>&1
 ```
 
 `-T` is required because cron has no terminal.
