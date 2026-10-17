@@ -222,7 +222,7 @@ docker compose up --build
 
 Open <http://localhost:8080>. On first start the container waits for MariaDB, applies all migrations and seeds demo data. Data and uploads persist in the `db_data` and `uploads` volumes; `docker compose down -v` resets everything.
 
-To deploy a public demo with HTTPS on a VPS, follow **[docs/DEPLOY.md](docs/DEPLOY.md)**. It uses `docker-compose.prod.yml` (Caddy in front of the app, secrets in `.env`) and a nightly `bin/reset_demo.php` cron job. You can also deploy the Dockerfile to Render/Railway with a managed MySQL/MariaDB, the `DB_*`, `APP_URL` and `SEED_DEMO_DATA=1` variables, and a persistent disk at `/var/www/html/public/uploads`.
+To deploy a public demo with HTTPS on a VPS, follow **[docs/DEPLOY.md](docs/DEPLOY.md)**. It uses `docker-compose.prod.yml` (Caddy in front of the app, secrets in `.env`) and a `bin/reset_demo.php` cron job that resets the demo every 6 hours. You can also deploy the Dockerfile to Render/Railway with a managed MySQL/MariaDB, the `DB_*`, `APP_URL` and `SEED_DEMO_DATA=1` variables, and a persistent disk at `/var/www/html/public/uploads`.
 
 ### Option 2 — XAMPP (or any PHP 8.1+ with MySQL/MariaDB)
 

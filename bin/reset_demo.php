@@ -3,7 +3,7 @@
  * AgriTrack – reset the public demo to its seeded state
  *
  *   php bin/reset_demo.php
- *   docker compose exec app php bin/reset_demo.php     (from the host, e.g. nightly cron)
+ *   docker compose exec app php bin/reset_demo.php     (from the host, e.g. cron every 6 hours)
  *
  * Drops and re-creates the database (migrate --fresh), re-seeds the demo
  * data and deletes everything visitors uploaded. Refuses to run unless
