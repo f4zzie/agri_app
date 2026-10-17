@@ -28,9 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mark_responded'])) {
 }
 
 if ($userRole === 'farmer') {
-    // Mark all pending as 'read' when farmer opens the page
-    $db->prepare("UPDATE inquiries SET status='read' WHERE farmer_id=? AND status='pending'")->execute([$uid]);
-
     // Count
     $countStmt = $db->prepare("SELECT COUNT(*) FROM inquiries WHERE farmer_id=?");
     $countStmt->execute([$uid]);
@@ -39,6 +36,9 @@ if ($userRole === 'farmer') {
     $pendingStmt = $db->prepare("SELECT COUNT(*) FROM inquiries WHERE farmer_id=? AND status='pending'");
     $pendingStmt->execute([$uid]);
     $pending = (int)$pendingStmt->fetchColumn();
+
+    // Count new inquiries first, then mark them as seen
+    $db->prepare("UPDATE inquiries SET status='read' WHERE farmer_id=? AND status='pending'")->execute([$uid]);
 
     $respondedStmt = $db->prepare("SELECT COUNT(*) FROM inquiries WHERE farmer_id=? AND status='responded'");
     $respondedStmt->execute([$uid]);
