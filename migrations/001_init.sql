@@ -1,25 +1,7 @@
 -- ============================================================
--- AgriTrack – Complete Database Schema
--- v2.0  (Farmer-Buyer Marketplace)
+-- 001 – Initial schema (v1, as originally submitted)
+-- Later migrations evolve this; never edit an applied migration.
 -- ============================================================
--- Import this file in phpMyAdmin → SQL tab, then run.
--- ============================================================
-
-CREATE DATABASE IF NOT EXISTS agri_app
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE agri_app;
-
--- --------------------------------------------------------
--- Drop tables in reverse dependency order
--- --------------------------------------------------------
-DROP TABLE IF EXISTS inquiries;
-DROP TABLE IF EXISTS login_attempts;
-DROP TABLE IF EXISTS password_resets;
-DROP TABLE IF EXISTS activity_log;
-DROP TABLE IF EXISTS crops;
-DROP TABLE IF EXISTS users;
 
 -- --------------------------------------------------------
 -- Table: users

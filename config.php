@@ -54,6 +54,12 @@ function loadEnv(string $path): void
             $value = substr($value, 1, -1);
         }
 
+        // A real environment variable (e.g. set by Docker) wins over .env
+        if (getenv($key) !== false) {
+            $_ENV[$key] = getenv($key);
+            continue;
+        }
+
         $_ENV[$key] = $value;
         putenv("$key=$value");
     }
@@ -62,6 +68,28 @@ function loadEnv(string $path): void
 // ---------------------------------------------------------------------------
 // 2. getDB() – return a singleton PDO connection
 // ---------------------------------------------------------------------------
+function pdoOptions(): array
+{
+    return [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ];
+}
+
+function serverDsn(): string
+{
+    $host = $_ENV['DB_HOST'] ?? 'localhost';
+    $port = (int) ($_ENV['DB_PORT'] ?? 3306);
+    return "mysql:host={$host};port={$port};charset=utf8mb4";
+}
+
+/** Connection to the MySQL server without selecting a database (used by bin/ scripts). */
+function getServerConnection(): PDO
+{
+    return new PDO(serverDsn(), $_ENV['DB_USER'] ?? 'root', $_ENV['DB_PASS'] ?? '', pdoOptions());
+}
+
 function getDB(): PDO
 {
     static $pdo = null;
@@ -70,25 +98,16 @@ function getDB(): PDO
         return $pdo;
     }
 
-    $host    = $_ENV['DB_HOST'] ?? 'localhost';
-    $port    = (int) ($_ENV['DB_PORT'] ?? 3306);
-    $dbname  = $_ENV['DB_NAME'] ?? 'agri_app';
-    $user    = $_ENV['DB_USER'] ?? 'root';
-    $pass    = $_ENV['DB_PASS'] ?? '';
-    $charset = 'utf8mb4';
-
-    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
-    $options = [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ];
+    $dsn = serverDsn() . ';dbname=' . ($_ENV['DB_NAME'] ?? 'agri_app');
 
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        $pdo = new PDO($dsn, $_ENV['DB_USER'] ?? 'root', $_ENV['DB_PASS'] ?? '', pdoOptions());
     } catch (PDOException $e) {
         // In production, do not expose the message
         error_log('DB Connection failed: ' . $e->getMessage());
+        if (PHP_SAPI === 'cli') {
+            throw $e;
+        }
         die('<div style="font-family:sans-serif;color:red;padding:20px;">
                <strong>Database connection failed.</strong> Please check your .env file.
              </div>');
@@ -297,12 +316,19 @@ function sendEmail(string $to, string $toName, string $subject, string $htmlBody
 // ---------------------------------------------------------------------------
 // Auto-initialisation
 // ---------------------------------------------------------------------------
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Load environment variables from .env (same directory as config.php).
+// Real environment variables (e.g. from Docker) take precedence.
+loadEnv(__DIR__ . '/.env');
+foreach (getenv() as $envKey => $envValue) {
+    if (!isset($_ENV[$envKey])) {
+        $_ENV[$envKey] = $envValue;
+    }
 }
 
-// Load environment variables from .env (same directory as config.php)
-loadEnv(__DIR__ . '/.env');
-
-// Set active language
-setLang();
+if (PHP_SAPI !== 'cli') {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    // Set active language
+    setLang();
+}
