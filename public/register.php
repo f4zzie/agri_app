@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'A valid email address is required.';
     }
 
-    if (strlen($password) < 6) {
-        $errors[] = 'Password must be at least 6 characters.';
+    if (strlen($password) < 8) {
+        $errors[] = 'Password must be at least 8 characters.';
     }
 
     if ($password !== $confirmPassword) {
@@ -280,7 +280,7 @@ $roleVal      = htmlspecialchars($_POST['role'] ?? 'farmer');
                        name="password"
                        required
                        autocomplete="new-password"
-                       placeholder="At least 6 characters">
+                       placeholder="At least 8 characters">
             </div>
 
             <div class="mb-3">

@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newPassword     = trim($_POST['new_password']     ?? '');
     $confirmPassword = trim($_POST['confirm_password'] ?? '');
 
-    if (strlen($newPassword) < 6) {
-        $errors[] = 'Password must be at least 6 characters.';
+    if (strlen($newPassword) < 8) {
+        $errors[] = 'Password must be at least 8 characters.';
     }
 
     if ($newPassword !== $confirmPassword) {
@@ -140,7 +140,7 @@ $currentLang = $_SESSION['lang'] ?? 'en';
                        name="new_password"
                        required
                        autocomplete="new-password"
-                       placeholder="At least 6 characters">
+                       placeholder="At least 8 characters">
             </div>
 
             <div class="mb-3">

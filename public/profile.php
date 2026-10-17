@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'profi
         $stmt = $db->prepare("UPDATE users SET name = ?, avatar = ? WHERE id = ?");
         $stmt->execute([$name, $newAvatar, $uid]);
 
-        $_SESSION['user_name'] = $name;
+        $_SESSION['name'] = $name;
 
         log_activity($uid, 'update_profile', 'Updated profile name/avatar');
         flash('success', 'Profile updated successfully.');
@@ -61,9 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'passw
     $newPassword     = $_POST['new_password'] ?? '';
     $confirmPassword = $_POST['confirm_password'] ?? '';
 
-    if (empty($currentPassword)) {
+    // Accounts created through Google have no password yet; they may set one.
+    $hasPassword = !empty($user['password_hash']);
+    if ($hasPassword && $currentPassword === '') {
         $passwordErrors[] = 'Current password is required.';
-    } elseif (!password_verify($currentPassword, $user['password_hash'])) {
+    } elseif ($hasPassword && !password_verify($currentPassword, $user['password_hash'])) {
         $passwordErrors[] = 'Current password is incorrect.';
     }
 
@@ -201,11 +203,15 @@ require_once __DIR__ . '/../includes/header.php';
                         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                         <input type="hidden" name="action" value="password">
 
+                        <?php if (!empty($user['password_hash'])): ?>
                         <div class="mb-3">
                             <label for="current_password" class="form-label fw-semibold">Current Password</label>
                             <input type="password" class="form-control" id="current_password"
                                    name="current_password" autocomplete="current-password" required>
                         </div>
+                        <?php else: ?>
+                        <p class="text-muted small">You signed up with Google. Set a password to also log in with email.</p>
+                        <?php endif; ?>
 
                         <div class="mb-3">
                             <label for="new_password" class="form-label fw-semibold">New Password</label>
