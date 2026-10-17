@@ -42,9 +42,9 @@ $actionsStmt->execute([$uid]);
 $distinctActions = $actionsStmt->fetchAll(PDO::FETCH_COLUMN);
 
 $actionLabels = [
-    'add_crop'        => 'Add Crop',
-    'edit_crop'       => 'Edit Crop',
-    'delete_crop'     => 'Delete Crop',
+    'add_product'     => 'Add Product',
+    'edit_product'    => 'Edit Product',
+    'delete_product'  => 'Delete Product',
     'update_profile'  => 'Update Profile',
     'change_password' => 'Change Password',
     'disease_check'   => 'Disease Check',
@@ -133,9 +133,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     $actionKey   = $log['action'];
                                     $actionLabel = $actionLabels[$actionKey] ?? ucfirst(str_replace('_', ' ', $actionKey));
                                     $iconMap = [
-                                        'add_crop'        => 'bi-plus-circle text-success',
-                                        'edit_crop'       => 'bi-pencil text-primary',
-                                        'delete_crop'     => 'bi-trash text-danger',
+                                        'add_product'     => 'bi-plus-circle text-success',
+                                        'edit_product'    => 'bi-pencil text-primary',
+                                        'delete_product'  => 'bi-trash text-danger',
                                         'update_profile'  => 'bi-person text-info',
                                         'change_password' => 'bi-shield-lock text-warning',
                                         'disease_check'   => 'bi-virus text-purple',

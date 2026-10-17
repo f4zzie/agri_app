@@ -44,7 +44,7 @@ $stmt = $db->prepare("DELETE FROM crops WHERE id = ? AND user_id = ?");
 $stmt->execute([$cropId, $uid]);
 
 $name = $crop['name'];
-log_activity($uid, 'delete_crop', "Deleted crop: {$name} (ID: {$cropId})");
+log_activity($uid, 'delete_product', "Deleted product: {$name} (ID: {$cropId})");
 flash('success', 'Crop "' . $name . '" has been deleted.');
 header('Location: dashboard.php');
 exit;
