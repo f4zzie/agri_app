@@ -78,14 +78,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Email to farmer
         $appUrl  = $_ENV['APP_URL'] ?? 'http://localhost/agri_app';
         $htmlBody =
-            "<p>Hello <strong>{$crop['farmer_name']}</strong>,</p>" .
+            "<p>Hello <strong>" . htmlspecialchars($crop['farmer_name']) . "</strong>,</p>" .
             "<p>You have a new inquiry from <strong>" . htmlspecialchars($_SESSION['name']) . "</strong> about your product <strong>" . htmlspecialchars($crop['name']) . "</strong>.</p>" .
             "<hr>" .
             "<p><strong>Message:</strong><br>" . nl2br(htmlspecialchars($message)) . "</p>" .
             "<p><strong>Buyer contact email:</strong> " . htmlspecialchars($_SESSION['email']) . "<br>" .
             "<strong>Buyer phone:</strong> " . htmlspecialchars($phoneInput) . "</p>" .
             "<hr>" .
-            "<p><a href='{$appUrl}/my_inquiries.php' style='background:#198754;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;'>View Inquiry →</a></p>" .
+            "<p><a href='" . htmlspecialchars($appUrl) . "/my_inquiries.php' style='background:#198754;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;'>View Inquiry →</a></p>" .
             "<p style='color:#888;font-size:12px;'>AgriTrack – Connecting Farmers to Business Owners</p>";
 
         sendEmail(
