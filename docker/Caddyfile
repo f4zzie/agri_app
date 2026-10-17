@@ -1,0 +1,6 @@
+# AgriTrack behind Caddy: automatic HTTPS (Let's Encrypt) for $DOMAIN,
+# HTTP -> HTTPS redirect, and X-Forwarded-For / X-Forwarded-Proto to the app.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:80
+}

@@ -1,0 +1,51 @@
+# Production override: Caddy in front of the app for automatic HTTPS.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Every secret comes from .env next to this file (see docs/DEPLOY.md); compose
+# refuses to start if a required one is missing. Only Caddy publishes ports:
+# the app's 8080 is removed and the database is never published.
+# Needs Docker Compose 2.24.4+ for "!reset".
+services:
+  app:
+    ports: !reset []
+    environment:
+      DB_PASS: ${DB_PASS:?set DB_PASS in .env}
+      APP_URL: https://${DOMAIN:?set DOMAIN in .env}
+      DEMO_MODE: ${DEMO_MODE:-1}
+      SEED_DEMO_DATA: ${DEMO_MODE:-1}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: https://${DOMAIN}/oauth_google.php
+      AT_USERNAME: ${AT_USERNAME:-}
+      AT_API_KEY: ${AT_API_KEY:-}
+      AT_SENDER_ID: ${AT_SENDER_ID:-}
+
+  db:
+    environment:
+      MARIADB_PASSWORD: ${DB_PASS:?set DB_PASS in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS:?set DB_ROOT_PASS in .env}
+
+  caddy:
+    image: caddy:2.8.4
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

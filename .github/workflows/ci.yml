@@ -171,3 +171,67 @@ jobs:
       - name: Tear down
         if: always()
         run: docker compose down -v
+
+  docker-prod:
+    name: Docker Compose prod override (Caddy HTTPS)
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE: docker compose -f docker-compose.yml -f docker-compose.prod.yml
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create .env (DOMAIN=localhost gets a certificate from Caddy's local CA)
+        run: |
+          {
+            echo "DOMAIN=localhost"
+            echo "DB_PASS=$(openssl rand -hex 24)"
+            echo "DB_ROOT_PASS=$(openssl rand -hex 24)"
+          } > .env
+      - name: Override file is valid
+        run: $COMPOSE config --quiet
+      - name: Start the stack
+        run: $COMPOSE up -d --build
+      - name: Wait for HTTPS (up to 90s)
+        run: |
+          for i in $(seq 45); do
+            code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/login.php || true)
+            [ "$code" = "200" ] && echo "HTTPS is up after ~$((i * 2))s" && exit 0
+            sleep 2
+          done
+          echo "No 200 from https://localhost/login.php within 90s (last: $code)"
+          exit 1
+      - name: Session cookie is Secure over HTTPS; HTTP redirects to HTTPS
+        run: |
+          cookie=$(curl -sk -D - -o /dev/null https://localhost/login.php | grep -i '^set-cookie: PHPSESSID')
+          echo "$cookie"
+          grep -qi '; secure' <<<"$cookie"
+          grep -qi '; httponly' <<<"$cookie"
+          redirect=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://localhost/login.php)
+          echo "http://localhost/login.php -> $redirect"
+          [[ "$redirect" == 30[18]\ https://localhost/login.php ]]
+      - name: Only Caddy is published (no 8080, no 3306)
+        run: |
+          if curl -s -o /dev/null --max-time 3 http://localhost:8080/; then echo "app port 8080 is published"; exit 1; fi
+          if (exec 3<>/dev/tcp/127.0.0.1/3306) 2>/dev/null; then echo "database port 3306 is published"; exit 1; fi
+          $COMPOSE ps --format '{{.Service}}: {{.Publishers}}'
+      - name: Demo login works over HTTPS and the app sees the client IP, not Caddy's
+        run: |
+          jar=$(mktemp)
+          token=$(curl -sk -c "$jar" -b "$jar" https://localhost/login.php \
+            | sed -n 's/.*name="csrf_token" value="\([^"]*\)".*/\1/p' | head -n1)
+          out=$(curl -sk -o /dev/null -w '%{http_code} %{redirect_url}' -c "$jar" -b "$jar" \
+            --data-urlencode "csrf_token=$token" -d email=buyer@agritrack.test \
+            --data-urlencode password=Demo@1234 https://localhost/login.php)
+          echo "POST login.php -> $out"
+          [[ "$out" == "302 https://localhost/dashboard.php" ]]
+          . ./.env
+          logged=$($COMPOSE exec -T db mariadb -uroot -p"$DB_ROOT_PASS" -N agri_app \
+            -e "SELECT ip_address FROM activity_log WHERE action = 'login' ORDER BY id DESC LIMIT 1")
+          caddy=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$($COMPOSE ps -q caddy)")
+          echo "login logged from $logged; Caddy is $caddy"
+          [ -n "$logged" ] && [ "$logged" != "$caddy" ]
+      - name: Container logs
+        if: failure()
+        run: $COMPOSE logs
+      - name: Tear down
+        if: always()
+        run: $COMPOSE down -v
