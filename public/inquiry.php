@@ -93,7 +93,7 @@ $img = upload_url($crop['image']);
                         <img src="<?= e($img) ?>" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" alt="">
                     <?php else: ?>
                         <div class="bg-success bg-opacity-25 rounded d-flex align-items-center justify-content-center"
-                             style="width:60px;height:60px;font-size:1.5rem;" aria-hidden="true">🌿</div>
+                             style="width:60px;height:60px;font-size:1.5rem;" aria-hidden="true"><?= product_emoji($crop['category'] ?? null) ?></div>
                     <?php endif; ?>
                     <div>
                         <div class="fw-bold"><?= e($crop['name']) ?> <span class="text-success small ms-1"><?= format_price($crop['price'], $crop['unit']) ?></span></div>

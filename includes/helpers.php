@@ -55,3 +55,12 @@ function upload_url(?string $file, string $subdir = ''): ?string
     $rel = 'uploads/' . ($subdir !== '' ? $subdir . '/' : '') . $file;
     return is_file(__DIR__ . '/../public/' . $rel) ? $rel : null;
 }
+
+/** Placeholder emoji for listings without a photo, by category. */
+function product_emoji(?string $category): string
+{
+    return [
+        'Grains & Cereals' => '🌽', 'Vegetables' => '🥬', 'Fruits' => '🥭', 'Dairy & Eggs' => '🥛',
+        'Meat & Poultry' => '🐔', 'Herbs & Spices' => '🌶️', 'Legumes & Pulses' => '🫘', 'Roots & Tubers' => '🥔',
+    ][$category ?? ''] ?? '🌿';
+}

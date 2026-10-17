@@ -155,7 +155,7 @@ $statCard = static function (string $icon, string $color, string $label, $value,
                                         <img src="<?= e($img) ?>" class="rounded" style="width:50px;height:50px;object-fit:cover;" alt="">
                                     <?php else: ?>
                                         <div class="rounded bg-success bg-opacity-10 d-flex align-items-center justify-content-center"
-                                             style="width:50px;height:50px;font-size:1.2rem;" aria-hidden="true">🌿</div>
+                                             style="width:50px;height:50px;font-size:1.2rem;" aria-hidden="true"><?= product_emoji($p['category'] ?? null) ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="fw-semibold">
@@ -260,7 +260,7 @@ $statCard = static function (string $icon, string $color, string $label, $value,
                 <?php if ($img): ?>
                     <img src="<?= e($img) ?>" class="card-img-top" style="height:140px;object-fit:cover;" alt="<?= e($p['name']) ?>" loading="lazy">
                 <?php else: ?>
-                    <div class="bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="height:140px;font-size:2rem;" aria-hidden="true">🌿</div>
+                    <div class="bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="height:140px;font-size:2rem;" aria-hidden="true"><?= product_emoji($p['category'] ?? null) ?></div>
                 <?php endif; ?>
                 <div class="card-body py-2">
                     <h3 class="h6 fw-bold mb-1"><?= e($p['name']) ?></h3>

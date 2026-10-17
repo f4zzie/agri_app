@@ -39,7 +39,7 @@ $stmt->execute([$farmerId]);
 $reviews = $stmt->fetchAll();
 
 $stmt = $db->prepare(
-    "SELECT * FROM crops WHERE user_id = ? AND status = 'available' ORDER BY created_at DESC LIMIT 12"
+    "SELECT * FROM v_marketplace WHERE farmer_id = ? AND status = 'available' ORDER BY created_at DESC LIMIT 12"
 );
 $stmt->execute([$farmerId]);
 $listings = $stmt->fetchAll();
@@ -86,7 +86,11 @@ $stars  = static fn (float $s): string => str_repeat('★', (int) round($s)) . s
             <?php foreach ($listings as $p): $img = upload_url($p['image']); ?>
             <div class="col">
                 <div class="card h-100 shadow-sm">
-                    <?php if ($img): ?><img src="<?= e($img) ?>" class="card-img-top" style="height:130px;object-fit:cover;" alt="" loading="lazy"><?php endif; ?>
+                    <?php if ($img): ?>
+                        <img src="<?= e($img) ?>" class="card-img-top" style="height:130px;object-fit:cover;" alt="" loading="lazy">
+                    <?php else: ?>
+                        <div class="bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="height:130px;font-size:2.5rem;" aria-hidden="true"><?= product_emoji($p['category']) ?></div>
+                    <?php endif; ?>
                     <div class="card-body py-2">
                         <h3 class="h6 fw-bold mb-1"><a href="view_crop.php?id=<?= (int) $p['id'] ?>" class="text-reset"><?= e($p['name']) ?></a></h3>
                         <div class="text-success small fw-semibold"><?= format_price($p['price'], $p['unit']) ?></div>

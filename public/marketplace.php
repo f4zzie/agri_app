@@ -155,7 +155,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <img src="<?= e($img) ?>" class="card-img-top" style="height:180px;object-fit:cover;" alt="<?= e($p['name']) ?>" loading="lazy">
             <?php else: ?>
                 <div class="bg-success bg-opacity-10 d-flex align-items-center justify-content-center"
-                     style="height:180px;font-size:3rem;" aria-hidden="true">🌿</div>
+                     style="height:180px;font-size:3rem;" aria-hidden="true"><?= product_emoji($p['category'] ?? null) ?></div>
             <?php endif; ?>
 
             <div class="card-body pb-1">
