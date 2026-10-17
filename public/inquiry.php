@@ -10,14 +10,7 @@ $db     = getDB();
 $uid    = (int) $_SESSION['user_id'];
 $cropId = (int) ($_GET['crop_id'] ?? $_POST['crop_id'] ?? 0);
 
-$stmt = $db->prepare(
-    "SELECT c.*, u.name AS farmer_name, u.email AS farmer_email, u.phone AS farmer_phone,
-            co.name AS farmer_county
-       FROM crops c
-       JOIN users u ON c.user_id = u.id
-       LEFT JOIN counties co ON co.id = u.county_id
-      WHERE c.id = ? AND u.role = 'farmer'"
-);
+$stmt = $db->prepare('SELECT * FROM v_marketplace WHERE id = ?');
 $stmt->execute([$cropId]);
 $crop = $stmt->fetch();
 
@@ -105,7 +98,7 @@ $img = upload_url($crop['image']);
                     <div>
                         <div class="fw-bold"><?= e($crop['name']) ?> <span class="text-success small ms-1"><?= format_price($crop['price'], $crop['unit']) ?></span></div>
                         <div class="small text-muted">
-                            <a href="farmer.php?id=<?= (int) $crop['user_id'] ?>" class="text-reset"><i class="bi bi-person me-1"></i><?= e($crop['farmer_name']) ?></a>
+                            <a href="farmer.php?id=<?= (int) $crop['farmer_id'] ?>" class="text-reset"><i class="bi bi-person me-1"></i><?= e($crop['farmer_name']) ?></a>
                             <?php if ($crop['farmer_county']): ?> · <span class="badge bg-success"><?= e($crop['farmer_county']) ?></span><?php endif; ?>
                         </div>
                     </div>

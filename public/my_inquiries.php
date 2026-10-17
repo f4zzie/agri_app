@@ -14,30 +14,22 @@ $page    = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 15;
 $offset  = ($page - 1) * $perPage;
 
-// Who is "me" in the thread: the crop owner (farmer) or the buyer
-$mineSql  = $isFarmer ? 'c.user_id = ?' : 'i.buyer_id = ?';
-$otherSql = $isFarmer ? 'i.buyer_id' : 'c.user_id';
+// Which side of the thread "me" is on (column names are fixed, not user input)
+$mineCol  = $isFarmer ? 'farmer_id' : 'buyer_id';
+$otherCol = $isFarmer ? 'buyer_name' : 'farmer_name';
 
-$counts = $db->prepare(
-    "SELECT i.status, COUNT(*) FROM inquiries i JOIN crops c ON c.id = i.crop_id
-      WHERE $mineSql GROUP BY i.status"
-);
+$counts = $db->prepare("SELECT status, COUNT(*) FROM v_inquiry_threads WHERE $mineCol = ? GROUP BY status");
 $counts->execute([$uid]);
 $byStatus = $counts->fetchAll(PDO::FETCH_KEY_PAIR) + ['pending' => 0, 'read' => 0, 'responded' => 0, 'completed' => 0];
 $total    = array_sum($byStatus);
 
 $stmt = $db->prepare(
-    "SELECT i.id, i.status, c.name AS crop_name, o.name AS other_name,
-            lm.body AS last_body, lm.created_at AS last_at, lm.sender_id AS last_sender,
-            (SELECT COUNT(*) FROM messages m WHERE m.inquiry_id = i.id) AS msg_count,
-            r.score AS rating
-       FROM inquiries i
-       JOIN crops c ON c.id = i.crop_id
-       JOIN users o ON o.id = $otherSql
-       LEFT JOIN messages lm ON lm.id = (SELECT MAX(m2.id) FROM messages m2 WHERE m2.inquiry_id = i.id)
-       LEFT JOIN ratings r   ON r.inquiry_id = i.id
-      WHERE $mineSql
-      ORDER BY lm.created_at DESC, i.id DESC
+    "SELECT id, status, crop_name, $otherCol AS other_name,
+            last_body, last_message_at AS last_at, last_sender_id AS last_sender,
+            message_count AS msg_count, rating
+       FROM v_inquiry_threads
+      WHERE $mineCol = ?
+      ORDER BY last_message_at DESC, id DESC
       LIMIT ? OFFSET ?"
 );
 $stmt->bindValue(1, $uid, PDO::PARAM_INT);

@@ -19,48 +19,45 @@ $perPage      = 12;
 $offset       = ($page - 1) * $perPage;
 
 // --- Build query ---
-$where  = ["u.role = 'farmer'"];
+$where  = ['1 = 1'];
 $params = [];
 
 if ($search !== '') {
-    $where[]       = '(c.name LIKE :q OR c.variety LIKE :q2 OR u.name LIKE :q3)';
+    $where[]       = '(v.name LIKE :q OR v.variety LIKE :q2 OR v.farmer_name LIKE :q3)';
     $params[':q']  = "%{$search}%";
     $params[':q2'] = "%{$search}%";
     $params[':q3'] = "%{$search}%";
 }
 if ($filterCounty > 0) {
-    $where[]           = 'u.county_id = :county';
+    $where[]           = 'v.county_id = :county';
     $params[':county'] = $filterCounty;
 }
 if ($filterCat > 0) {
-    $where[]             = 'c.category_id = :category';
+    $where[]             = 'v.category_id = :category';
     $params[':category'] = $filterCat;
 }
 if ($filterStatus !== '') {
-    $where[]           = 'c.status = :status';
+    $where[]           = 'v.status = :status';
     $params[':status'] = $filterStatus;
 }
 if ($filterStage !== '') {
-    $where[]          = 'c.growth_stage = :stage';
+    $where[]          = 'v.growth_stage = :stage';
     $params[':stage'] = $filterStage;
 }
 
 $whereSQL = 'WHERE ' . implode(' AND ', $where);
 
-$countStmt = $db->prepare("SELECT COUNT(*) FROM crops c JOIN users u ON c.user_id = u.id $whereSQL");
+$countStmt = $db->prepare("SELECT COUNT(*) FROM v_marketplace v $whereSQL");
 $countStmt->execute($params);
 $totalProducts = (int) $countStmt->fetchColumn();
 $totalPages    = max(1, (int) ceil($totalProducts / $perPage));
 
 $stmt = $db->prepare(
-    "SELECT c.*, u.name AS farmer_name, co.name AS farmer_county, u.phone AS farmer_phone,
-            cat.name AS category
-       FROM crops c
-       JOIN users u ON c.user_id = u.id
-       LEFT JOIN counties co    ON co.id  = u.county_id
-       LEFT JOIN categories cat ON cat.id = c.category_id
+    "SELECT v.*, fr.avg_rating, fr.rating_count
+       FROM v_marketplace v
+       LEFT JOIN v_farmer_ratings fr ON fr.farmer_id = v.farmer_id
      $whereSQL
-     ORDER BY c.status = 'available' DESC, c.created_at DESC
+     ORDER BY v.status = 'available' DESC, v.created_at DESC
      LIMIT :limit OFFSET :offset"
 );
 foreach ($params as $k => $v) {
@@ -168,7 +165,12 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php if ($p['variety']): ?>
                     <small class="text-muted"><?= e($p['variety']) ?></small><br>
                 <?php endif; ?>
-                <small class="text-muted"><i class="bi bi-person me-1"></i><?= e($p['farmer_name']) ?></small>
+                <small class="text-muted">
+                    <a href="farmer.php?id=<?= (int) $p['farmer_id'] ?>" class="text-reset"><i class="bi bi-person me-1"></i><?= e($p['farmer_name']) ?></a>
+                    <?php if ($p['rating_count']): ?>
+                        <span class="text-warning ms-1" title="<?= sprintf(t('rating_summary'), $p['avg_rating'], (int) $p['rating_count']) ?>">★ <?= e((string) $p['avg_rating']) ?></span>
+                    <?php endif; ?>
+                </small>
                 <div class="fw-semibold text-success mt-1"><?= format_price($p['price'], $p['unit']) ?></div>
                 <div class="mt-2 d-flex gap-1 flex-wrap">
                     <?= status_badge($p['status']) ?>

@@ -8,14 +8,7 @@ require_once __DIR__ . '/../config.php';
 
 $cropId = (int) ($_GET['id'] ?? 0);
 
-$stmt = getDB()->prepare(
-    'SELECT c.*, u.name AS farmer_name, co.name AS farmer_county, cat.name AS category
-       FROM crops c
-       JOIN users u ON u.id = c.user_id
-       LEFT JOIN counties co    ON co.id  = u.county_id
-       LEFT JOIN categories cat ON cat.id = c.category_id
-      WHERE c.id = ?'
-);
+$stmt = getDB()->prepare('SELECT * FROM v_marketplace WHERE id = ?');
 $stmt->execute([$cropId]);
 $crop = $stmt->fetch();
 

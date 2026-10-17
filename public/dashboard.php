@@ -40,21 +40,17 @@ if ($role === 'farmer') {
     $products = $stmt->fetchAll();
 
     $stmt = $db->prepare(
-        'SELECT i.*, c.name AS crop_name, u.name AS buyer_name, m.body AS message
-           FROM inquiries i
-           JOIN crops c ON i.crop_id = c.id
-           JOIN users u ON i.buyer_id = u.id
-           JOIN messages m ON m.id = (SELECT MAX(id) FROM messages WHERE inquiry_id = i.id)
-          WHERE c.user_id = ?
-          ORDER BY m.created_at DESC LIMIT 5'
+        'SELECT id, status, crop_name, buyer_name, last_body AS message
+           FROM v_inquiry_threads
+          WHERE farmer_id = ?
+          ORDER BY last_message_at DESC LIMIT 5'
     );
     $stmt->execute([$uid]);
     $recentInquiries = $stmt->fetchAll();
 } else {
     // ── BUYER ─────────────────────────────────────────────────────────────────
     $totalProducts = (int) $db->query(
-        "SELECT COUNT(*) FROM crops c JOIN users u ON c.user_id = u.id
-          WHERE u.role = 'farmer' AND c.status = 'available'"
+        "SELECT COUNT(*) FROM v_marketplace WHERE status = 'available'"
     )->fetchColumn();
 
     $stmt = $db->prepare('SELECT COUNT(*) FROM inquiries WHERE buyer_id = ?');
@@ -66,18 +62,13 @@ if ($role === 'farmer') {
     )->fetchColumn();
 
     $latestProducts = $db->query(
-        "SELECT c.*, u.name AS farmer_name, co.name AS farmer_county
-           FROM crops c
-           JOIN users u ON c.user_id = u.id
-           LEFT JOIN counties co ON co.id = u.county_id
-          WHERE u.role = 'farmer' AND c.status = 'available'
-          ORDER BY c.created_at DESC LIMIT 6"
+        "SELECT * FROM v_marketplace WHERE status = 'available' ORDER BY created_at DESC LIMIT 6"
     )->fetchAll();
 
     $stmt = $db->prepare(
-        'SELECT i.*, c.name AS crop_name
-           FROM inquiries i JOIN crops c ON i.crop_id = c.id
-          WHERE i.buyer_id = ? ORDER BY i.created_at DESC LIMIT 5'
+        'SELECT id, status, crop_name, created_at
+           FROM v_inquiry_threads
+          WHERE buyer_id = ? ORDER BY last_message_at DESC LIMIT 5'
     );
     $stmt->execute([$uid]);
     $myRecentInq = $stmt->fetchAll();

@@ -9,13 +9,12 @@ $farmerId = (int) ($_GET['id'] ?? 0);
 
 $stmt = $db->prepare(
     "SELECT u.id, u.name, u.avatar, u.created_at, co.name AS county,
-            (SELECT ROUND(AVG(r.score), 1) FROM ratings r JOIN inquiries i ON i.id = r.inquiry_id
-               JOIN crops c ON c.id = i.crop_id WHERE c.user_id = u.id) AS avg_rating,
-            (SELECT COUNT(*) FROM ratings r JOIN inquiries i ON i.id = r.inquiry_id
-               JOIN crops c ON c.id = i.crop_id WHERE c.user_id = u.id) AS rating_count,
-            (SELECT COUNT(*) FROM inquiries i JOIN crops c ON c.id = i.crop_id
-              WHERE c.user_id = u.id AND i.status = 'completed') AS deals_completed
-       FROM users u LEFT JOIN counties co ON co.id = u.county_id
+            fr.avg_rating, COALESCE(fr.rating_count, 0) AS rating_count,
+            (SELECT COUNT(*) FROM v_inquiry_threads t
+              WHERE t.farmer_id = u.id AND t.status = 'completed') AS deals_completed
+       FROM users u
+       LEFT JOIN counties co         ON co.id = u.county_id
+       LEFT JOIN v_farmer_ratings fr ON fr.farmer_id = u.id
       WHERE u.id = ? AND u.role = 'farmer'"
 );
 $stmt->execute([$farmerId]);

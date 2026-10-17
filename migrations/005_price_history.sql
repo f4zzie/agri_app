@@ -38,7 +38,7 @@ AFTER INSERT ON crops FOR EACH ROW
 INSERT INTO price_history (crop_id, product_key, unit, county_id, price)
 SELECT NEW.id, LOWER(TRIM(NEW.name)), NEW.unit, u.county_id, NEW.price
   FROM users u
- WHERE u.id = NEW.user_id AND NEW.price IS NOT NULL;
+ WHERE u.id = NEW.user_id AND NEW.price > 0;
 
 CREATE TRIGGER trg_crops_price_after_update
 AFTER UPDATE ON crops FOR EACH ROW
@@ -46,7 +46,7 @@ INSERT INTO price_history (crop_id, product_key, unit, county_id, price)
 SELECT NEW.id, LOWER(TRIM(NEW.name)), NEW.unit, u.county_id, NEW.price
   FROM users u
  WHERE u.id = NEW.user_id
-   AND NEW.price IS NOT NULL
+   AND NEW.price > 0
    AND (NOT (OLD.price <=> NEW.price)
         OR OLD.unit <> NEW.unit
         OR LOWER(TRIM(OLD.name)) <> LOWER(TRIM(NEW.name)));
