@@ -248,6 +248,14 @@ $statCard = static function (string $icon, string $color, string $label, $value,
         $statCard('bi-chat-dots', 'primary', t('inquiries_sent'), $myInquiries);
         $statCard('bi-geo-alt', 'warning', t('counties_with_farmers'), $countiesCount);
         ?>
+        <div class="col-6 col-lg-3">
+            <a href="price_trends.php" class="card stat-card border-0 shadow-sm h-100 text-decoration-none text-reset">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3"><i class="bi bi-graph-up fs-4 text-info"></i></div>
+                    <div class="fw-semibold"><?= t('price_trends') ?> →</div>
+                </div>
+            </a>
+        </div>
     </div>
 
     <h2 class="h5 fw-semibold mb-3"><?= t('latest_products') ?></h2>

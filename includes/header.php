@@ -99,6 +99,12 @@ $userRole    = $_SESSION['role'] ?? 'farmer';
                     <i class="bi bi-shop me-2"></i>Marketplace
                 </a>
             </li>
+            <!-- Common: Price Trends -->
+            <li class="nav-item">
+                <a class="nav-link text-white sidebar-link" href="<?= $root ?>price_trends.php">
+                    <i class="bi bi-graph-up me-2"></i><?= t('price_trends') ?>
+                </a>
+            </li>
             <!-- Common: My Inquiries -->
             <li class="nav-item">
                 <a class="nav-link text-white sidebar-link" href="<?= $root ?>my_inquiries.php">
