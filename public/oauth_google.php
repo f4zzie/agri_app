@@ -185,6 +185,14 @@ if (isset($_GET['code'])) {
         exit;
     }
 
+    // Only trust the address if Google has verified it; otherwise anyone could
+    // create a Google account with someone else's email and take over theirs.
+    if (empty($googleUser['verified_email'])) {
+        flash('danger', t('google_email_unverified'));
+        header('Location: login.php');
+        exit;
+    }
+
     $googleId    = $googleUser['id']      ?? '';
     $googleEmail = $googleUser['email']   ?? '';
     $googleName  = $googleUser['name']    ?? $googleEmail;
@@ -229,12 +237,7 @@ if (isset($_GET['code'])) {
         unset($_SESSION['oauth_role']);
     }
 
-    // --- Set session ---
-    session_regenerate_id(true);
-    $_SESSION['user_id'] = $userId;
-    $_SESSION['name']    = $userName;
-    $_SESSION['email']   = $googleEmail;
-    $_SESSION['role']    = $role;
+    login_user(['id' => $userId, 'name' => $userName, 'email' => $googleEmail, 'role' => $role]);
 
     log_activity($userId, 'login_google', 'Logged in via Google OAuth');
 

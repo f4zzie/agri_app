@@ -1,173 +1,107 @@
 <?php
 /**
- * AgriTrack – Main header include (for protected pages with sidebar)
- *
- * Variables expected to be set before including this file:
- *   $pageTitle (string) – page title shown in <title> and page heading
+ * AgriTrack – layout top for signed-in pages (navbar + sidebar).
+ * Set $pageTitle before including.
  */
 require_once __DIR__ . '/../config.php';
 
-// $root is relative path back to agri_app root from any page.
-// Since all pages live at the root of agri_app, this is empty string.
-$root = '';
-
+$root        = '';
 $currentLang = $_SESSION['lang'] ?? 'en';
-$userName    = htmlspecialchars($_SESSION['name'] ?? 'User');
+$userName    = $_SESSION['name'] ?? 'User';
 $userRole    = $_SESSION['role'] ?? 'farmer';
+$currentPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
+
+/** Sidebar entry: [file, icon, label key]. */
+$nav = [
+    ['dashboard.php',    'bi-speedometer2',  'dashboard'],
+    ['marketplace.php',  'bi-shop',          'marketplace'],
+    ['price_trends.php', 'bi-graph-up',      'price_trends'],
+    ['my_inquiries.php', 'bi-chat-dots',     'my_inquiries'],
+];
+if ($userRole === 'farmer') {
+    $nav[] = ['add_crop.php',       'bi-plus-circle',       'add_crop'];
+    $nav[] = ['send_reminders.php', 'bi-bell',              'send_reminders'];
+    $nav[] = ['export.php',         'bi-file-earmark-arrow-down', 'export_pdf'];
+    $nav[] = ['disease_check.php',  'bi-bug',               'disease_check'];
+}
+$nav[] = ['activity_log.php', 'bi-clock-history', 'activity_log'];
+
+$activeFor = ['edit_crop.php' => 'dashboard.php', 'qrcode.php' => 'dashboard.php',
+              'inquiry_thread.php' => 'my_inquiries.php', 'inquiry.php' => 'marketplace.php',
+              'farmer.php' => 'marketplace.php'];
+$activePage = $activeFor[$currentPage] ?? $currentPage;
 ?>
 <!DOCTYPE html>
-<html lang="<?= $currentLang ?>">
+<html lang="<?= e($currentLang) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AgriTrack – Agricultural Crop Tracking and Management System">
-    <title><?= htmlspecialchars($pageTitle ?? t('app_name')) ?> | <?= t('app_name') ?></title>
-
-    <!-- Bootstrap 5 CSS -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <!-- Custom CSS -->
+    <meta name="description" content="<?= e(t('app_name') . ' – ' . t('app_tagline')) ?>">
+    <title><?= e($pageTitle ?? t('app_name')) ?> | <?= t('app_name') ?></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="<?= $root ?>style.css">
 </head>
 <body class="bg-light">
+<a class="visually-hidden-focusable position-absolute top-0 start-0 m-2 btn btn-light" href="#main"><?= t('skip_to_content') ?></a>
 
-<!-- ============================================================
-     TOP NAVBAR
-     ============================================================ -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-success px-3" style="height:56px;">
+<nav class="navbar navbar-dark bg-success px-3 app-navbar">
     <div class="d-flex align-items-center gap-2">
-        <!-- Hamburger for mobile sidebar toggle -->
-        <button class="btn btn-outline-light btn-sm d-lg-none me-2"
-                id="sidebarToggle"
-                aria-label="Toggle sidebar">
+        <button class="btn btn-outline-light btn-sm d-lg-none me-1" id="sidebarToggle" type="button"
+                aria-controls="sidebar" aria-expanded="false" aria-label="<?= t('toggle_sidebar') ?>">
             <i class="bi bi-list fs-5"></i>
         </button>
-
-        <a class="navbar-brand fw-bold" href="<?= $root ?>dashboard.php">
-            🌿 <?= t('app_name') ?>
-        </a>
+        <a class="navbar-brand fw-bold" href="<?= $root ?>dashboard.php">🌿 <?= t('app_name') ?></a>
     </div>
 
-    <div class="ms-auto d-flex align-items-center gap-3">
-        <!-- Language switcher -->
-        <div class="d-flex gap-1">
-            <a href="<?= lang_url('en') ?>"
-               class="btn btn-sm <?= $currentLang === 'en' ? 'btn-light' : 'btn-outline-light' ?>">
-                <?= t('english') ?>
-            </a>
-            <a href="<?= lang_url('sw') ?>"
-               class="btn btn-sm <?= $currentLang === 'sw' ? 'btn-light' : 'btn-outline-light' ?>">
-                <?= t('swahili') ?>
-            </a>
+    <div class="ms-auto d-flex align-items-center gap-2 gap-md-3">
+        <div class="btn-group" role="group" aria-label="<?= t('language') ?>">
+            <a href="<?= lang_url('en') ?>" class="btn btn-sm <?= $currentLang === 'en' ? 'btn-light' : 'btn-outline-light' ?>" lang="en">EN</a>
+            <a href="<?= lang_url('sw') ?>" class="btn btn-sm <?= $currentLang === 'sw' ? 'btn-light' : 'btn-outline-light' ?>" lang="sw">SW</a>
         </div>
 
-        <!-- User name -->
-        <span class="text-white small d-none d-md-inline">
-            <i class="bi bi-person-circle me-1"></i><?= $userName ?>
-        </span>
-
-        <!-- Logout -->
-        <a href="<?= $root ?>logout.php"
-           class="btn btn-outline-light btn-sm">
-            <i class="bi bi-box-arrow-right me-1"></i><?= t('logout') ?>
+        <a href="<?= $root ?>profile.php" class="text-white small d-none d-md-inline text-decoration-none">
+            <i class="bi bi-person-circle me-1"></i><?= e($userName) ?>
         </a>
+
+        <form method="POST" action="<?= $root ?>logout.php" class="m-0">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+            <button type="submit" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-box-arrow-right"></i><span class="d-none d-sm-inline ms-1"><?= t('logout') ?></span>
+            </button>
+        </form>
     </div>
 </nav>
 
-<!-- ============================================================
-     BODY WRAPPER  (sidebar + main)
-     ============================================================ -->
-<div class="d-flex" style="min-height: calc(100vh - 56px);">
-
-    <!-- ---- SIDEBAR ---- -->
-    <nav id="sidebar"
-         class="bg-dark text-white flex-shrink-0"
-         style="width:220px; min-height:100%;">
+<div class="d-flex app-body">
+    <nav id="sidebar" class="bg-dark text-white flex-shrink-0" aria-label="<?= t('main_menu') ?>">
         <ul class="nav flex-column pt-3">
-            <!-- Common: Dashboard -->
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>dashboard.php">
-                    <i class="bi bi-speedometer2 me-2"></i><?= t('dashboard') ?>
-                </a>
-            </li>
-            <!-- Common: Marketplace -->
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>marketplace.php">
-                    <i class="bi bi-shop me-2"></i>Marketplace
-                </a>
-            </li>
-            <!-- Common: Price Trends -->
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>price_trends.php">
-                    <i class="bi bi-graph-up me-2"></i><?= t('price_trends') ?>
-                </a>
-            </li>
-            <!-- Common: My Inquiries -->
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>my_inquiries.php">
-                    <i class="bi bi-chat-dots me-2"></i>My Inquiries
-                </a>
-            </li>
-            <!-- Common: Activity Log -->
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>activity_log.php">
-                    <i class="bi bi-clock-history me-2"></i><?= t('activity_log') ?>
-                </a>
-            </li>
-            <?php if ($userRole === 'farmer'): ?>
-            <!-- Farmer-only links -->
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>add_crop.php">
-                    <i class="bi bi-plus-circle me-2"></i><?= t('add_crop') ?>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>disease_check.php">
-                    <i class="bi bi-bug me-2"></i><?= t('disease_check') ?>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>export.php">
-                    <i class="bi bi-file-earmark-pdf me-2"></i><?= t('export_pdf') ?>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>send_reminders.php">
-                    <i class="bi bi-bell me-2"></i><?= t('send_reminders') ?>
-                </a>
-            </li>
-            <?php endif; ?>
-            <!-- Common: Profile -->
+            <?php foreach ($nav as [$file, $icon, $label]): ?>
+                <li class="nav-item">
+                    <a class="nav-link text-white sidebar-link <?= $activePage === $file ? 'active' : '' ?>"
+                       href="<?= $root . $file ?>" <?= $activePage === $file ? 'aria-current="page"' : '' ?>>
+                        <i class="bi <?= $icon ?> me-2"></i><?= t($label) ?>
+                    </a>
+                </li>
+            <?php endforeach; ?>
             <li class="nav-item mt-2 border-top border-secondary pt-2">
-                <a class="nav-link text-white sidebar-link" href="<?= $root ?>profile.php">
+                <a class="nav-link text-white sidebar-link <?= $activePage === 'profile.php' ? 'active' : '' ?>" href="<?= $root ?>profile.php">
                     <i class="bi bi-person me-2"></i><?= t('profile') ?>
                 </a>
             </li>
-            <!-- Role badge at bottom -->
             <li class="nav-item px-3 mt-3">
                 <span class="badge <?= $userRole === 'farmer' ? 'bg-success' : 'bg-primary' ?> w-100 py-2">
-                    <?= $userRole === 'farmer' ? '🌾 Farmer' : '🏪 Business Owner' ?>
+                    <?= $userRole === 'farmer' ? '🌾 ' . t('role_farmer') : '🏪 ' . t('role_buyer') ?>
                 </span>
             </li>
         </ul>
     </nav>
 
-    <!-- ---- MAIN CONTENT ---- -->
-    <main class="flex-grow-1 p-4">
-<?php
-// Display any flash messages right after opening <main>
-$flashTypes = ['success', 'danger', 'warning', 'info'];
-foreach ($flashTypes as $fType) {
-    $fMsg = flash($fType);
-    if ($fMsg !== null): ?>
-        <div class="alert alert-<?= $fType ?> alert-dismissible fade show flash-alert"
-             role="alert">
-            <?= htmlspecialchars($fMsg) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <main id="main" class="flex-grow-1 p-3 p-md-4 min-w-0">
+<?php foreach (['success', 'danger', 'warning', 'info'] as $fType):
+    if (($fMsg = flash($fType)) !== null): ?>
+        <div class="alert alert-<?= $fType ?> alert-dismissible fade show flash-alert" role="alert">
+            <?= e($fMsg) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<?= t('close') ?>"></button>
         </div>
-    <?php endif;
-}
-?>
+<?php endif; endforeach; ?>

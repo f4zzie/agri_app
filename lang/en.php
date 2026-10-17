@@ -317,4 +317,12 @@ return [
     'or'                       => 'or',
     'continue_with_google'     => 'Continue with Google',
     'have_account'             => 'Already have an account?',
+
+    // ── Login & layout ────────────────────────────────────────────────────────
+    'err_login_required'       => 'Email and password are required.',
+    'verify_email_first'       => 'Please verify your email first. Check your inbox for the verification link.',
+    'demo_accounts'            => 'Demo accounts',
+    'google_email_unverified'  => 'Your Google email address is not verified, so it cannot be used to sign in.',
+    'skip_to_content'          => 'Skip to main content',
+    'main_menu'                => 'Main menu',
 ];

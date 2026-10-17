@@ -11,19 +11,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.getElementById('sidebar');
 
     if (sidebarToggle && sidebar) {
+        const setOpen = function (open) {
+            sidebar.classList.toggle('show', open);
+            sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
         sidebarToggle.addEventListener('click', function () {
-            sidebar.classList.toggle('show');
+            setOpen(!sidebar.classList.contains('show'));
         });
 
-        // Close sidebar when clicking outside on mobile
+        // Close the overlay sidebar on outside click or Escape
         document.addEventListener('click', function (e) {
-            if (
-                window.innerWidth <= 768 &&
-                sidebar.classList.contains('show') &&
-                !sidebar.contains(e.target) &&
-                !sidebarToggle.contains(e.target)
-            ) {
-                sidebar.classList.remove('show');
+            if (window.innerWidth < 992 && sidebar.classList.contains('show') &&
+                !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                setOpen(false);
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                setOpen(false);
+                sidebarToggle.focus();
             }
         });
     }

@@ -277,6 +277,18 @@ function isLoggedIn(): bool
 }
 
 // ---------------------------------------------------------------------------
+// 9b. login_user() – start an authenticated session for a user row
+// ---------------------------------------------------------------------------
+function login_user(array $user): void
+{
+    session_regenerate_id(true); // new id on privilege change: prevents session fixation
+    $_SESSION['user_id'] = (int) $user['id'];
+    $_SESSION['name']    = $user['name'];
+    $_SESSION['email']   = $user['email'];
+    $_SESSION['role']    = $user['role'] ?? 'farmer';
+}
+
+// ---------------------------------------------------------------------------
 // 10. sendEmail() – send HTML email via PHPMailer (requires composer install)
 // ---------------------------------------------------------------------------
 function mailConfigured(): bool
@@ -350,7 +362,21 @@ foreach (getenv() as $envKey => $envValue) {
 }
 
 if (PHP_SAPI !== 'cli') {
+    $https = ($_SERVER['HTTPS'] ?? '') === 'on' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+
+    // Baseline security headers for every page
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: DENY');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+
     if (session_status() === PHP_SESSION_NONE) {
+        ini_set('session.use_strict_mode', '1');
+        session_set_cookie_params([
+            'httponly' => true,   // not readable from JavaScript
+            'samesite' => 'Lax',  // not sent on cross-site POSTs
+            'secure'   => $https,
+        ]);
         session_start();
     }
     // Set active language

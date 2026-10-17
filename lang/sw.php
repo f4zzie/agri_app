@@ -316,4 +316,12 @@ return [
     'or'                       => 'au',
     'continue_with_google'     => 'Endelea na Google',
     'have_account'             => 'Una akaunti tayari?',
+
+    // ── Login & layout ────────────────────────────────────────────────────────
+    'err_login_required'       => 'Barua pepe na nenosiri vinahitajika.',
+    'verify_email_first'       => 'Tafadhali thibitisha barua pepe yako kwanza. Angalia kikasha chako kwa kiungo cha uthibitisho.',
+    'demo_accounts'            => 'Akaunti za majaribio',
+    'google_email_unverified'  => 'Barua pepe yako ya Google haijathibitishwa, kwa hiyo haiwezi kutumika kuingia.',
+    'skip_to_content'          => 'Ruka hadi maudhui',
+    'main_menu'                => 'Menyu kuu',
 ];

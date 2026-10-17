@@ -116,8 +116,14 @@ body {
     max-width: 420px;
 }
 
-/* ---------- Responsive – Mobile Sidebar ---------- */
-@media (max-width: 768px) {
+/* ---------- App layout ---------- */
+.app-navbar { height: 56px; position: sticky; top: 0; z-index: 1030; flex-wrap: nowrap; }
+.app-body   { min-height: calc(100vh - 56px); }
+#sidebar    { width: 220px; }
+#sidebar .sidebar-link.active { font-weight: 600; }
+
+/* Below the lg breakpoint (where the toggle button shows) the sidebar is an overlay */
+@media (max-width: 991.98px) {
     #sidebar {
         display: none;
         position: fixed;
@@ -126,11 +132,9 @@ body {
         height: calc(100vh - 56px);
         z-index: 1040;
         overflow-y: auto;
+        box-shadow: 4px 0 16px rgba(0,0,0,.25);
     }
-
-    #sidebar.show {
-        display: block;
-    }
+    #sidebar.show { display: block; }
 }
 
 /* ---------- Dashboard Hero Banner ---------- */
