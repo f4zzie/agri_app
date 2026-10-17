@@ -207,3 +207,26 @@ body {
     padding-top: 1rem;
     border-top: 1px solid #dee2e6;
 }
+
+/* ---------- Inquiry conversation ---------- */
+.chat-body { max-height: 60vh; overflow-y: auto; background: #f6f8f7; }
+.chat-bubble {
+    max-width: 80%;
+    padding: .6rem .85rem;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    overflow-wrap: anywhere;
+}
+.chat-mine   { background: #d1e7dd; border-bottom-right-radius: 4px; }
+.chat-theirs { background: #fff;    border-bottom-left-radius: 4px; }
+.chat-time   { font-size: .72rem; color: #6c757d; margin-top: .25rem; text-align: right; }
+.min-w-0 { min-width: 0; }
+
+/* ---------- Star rating input (CSS only, keyboard accessible) ---------- */
+.star-input { display: inline-flex; flex-direction: row-reverse; gap: .15rem; border: 0; padding: 0; }
+.star-input input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.star-input label { font-size: 1.8rem; color: #ced4da; cursor: pointer; line-height: 1; }
+.star-input input:checked ~ label,
+.star-input label:hover,
+.star-input label:hover ~ label { color: #ffc107; }
+.star-input input:focus-visible + label { outline: 2px solid #198754; border-radius: 4px; }

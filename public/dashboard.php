@@ -7,7 +7,7 @@ $uid      = (int) $_SESSION['user_id'];
 $userName = $_SESSION['name'] ?? 'User';
 $role     = $_SESSION['role'] ?? 'farmer';
 
-$inqColors = ['pending' => 'warning', 'read' => 'info', 'responded' => 'success'];
+$inqColors = ['pending' => 'warning', 'read' => 'info', 'responded' => 'primary', 'completed' => 'success'];
 
 if ($role === 'farmer') {
     // ── FARMER ────────────────────────────────────────────────────────────────
@@ -21,7 +21,10 @@ if ($role === 'farmer') {
     $stmt->execute([$uid]);
     $stats = $stmt->fetch();
 
-    $stmt = $db->prepare("SELECT COUNT(*) FROM inquiries WHERE farmer_id = ? AND status = 'pending'");
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) FROM inquiries i JOIN crops c ON c.id = i.crop_id
+          WHERE c.user_id = ? AND i.status = 'pending'"
+    );
     $stmt->execute([$uid]);
     $pendingInquiries = (int) $stmt->fetchColumn();
 
@@ -37,12 +40,13 @@ if ($role === 'farmer') {
     $products = $stmt->fetchAll();
 
     $stmt = $db->prepare(
-        'SELECT i.*, c.name AS crop_name, u.name AS buyer_name, u.phone AS buyer_phone
+        'SELECT i.*, c.name AS crop_name, u.name AS buyer_name, m.body AS message
            FROM inquiries i
            JOIN crops c ON i.crop_id = c.id
            JOIN users u ON i.buyer_id = u.id
-          WHERE i.farmer_id = ?
-          ORDER BY i.created_at DESC LIMIT 5'
+           JOIN messages m ON m.id = (SELECT MAX(id) FROM messages WHERE inquiry_id = i.id)
+          WHERE c.user_id = ?
+          ORDER BY m.created_at DESC LIMIT 5'
     );
     $stmt->execute([$uid]);
     $recentInquiries = $stmt->fetchAll();
@@ -210,12 +214,12 @@ $statCard = static function (string $icon, string $color, string $label, $value,
         </div>
         <ul class="list-group list-group-flush">
             <?php foreach ($recentInquiries as $inq): ?>
-            <li class="list-group-item d-flex justify-content-between align-items-start py-3">
+            <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-start py-3 position-relative">
                 <div>
-                    <div class="fw-semibold"><?= e($inq['buyer_name']) ?>
+                    <div class="fw-semibold"><a href="inquiry_thread.php?id=<?= (int) $inq['id'] ?>" class="stretched-link text-reset text-decoration-none"><?= e($inq['buyer_name']) ?></a>
                         <small class="text-muted fw-normal"><?= t('re') ?>: <?= e($inq['crop_name']) ?></small>
                     </div>
-                    <div class="small text-muted"><?= e(mb_substr($inq['message'], 0, 80)) ?>…</div>
+                    <div class="small text-muted"><?= e(mb_substr($inq['message'], 0, 80)) ?><?= mb_strlen($inq['message']) > 80 ? '…' : '' ?></div>
                 </div>
                 <span class="badge bg-<?= $inqColors[$inq['status']] ?? 'secondary' ?> ms-2"><?= t('inq_' . $inq['status']) ?></span>
             </li>
@@ -286,9 +290,9 @@ $statCard = static function (string $icon, string $color, string $label, $value,
         </div>
         <ul class="list-group list-group-flush">
             <?php foreach ($myRecentInq as $inq): ?>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
+            <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center position-relative">
                 <div>
-                    <span class="fw-semibold"><?= e($inq['crop_name']) ?></span>
+                    <a href="inquiry_thread.php?id=<?= (int) $inq['id'] ?>" class="stretched-link text-reset text-decoration-none fw-semibold"><?= e($inq['crop_name']) ?></a>
                     <small class="text-muted d-block"><?= date('d M Y', strtotime($inq['created_at'])) ?></small>
                 </div>
                 <span class="badge bg-<?= $inqColors[$inq['status']] ?? 'secondary' ?>"><?= t('inq_' . $inq['status']) ?></span>
