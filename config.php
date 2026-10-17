@@ -232,8 +232,17 @@ function isLoggedIn(): bool
 // ---------------------------------------------------------------------------
 // 10. sendEmail() – send HTML email via PHPMailer (requires composer install)
 // ---------------------------------------------------------------------------
+function mailConfigured(): bool
+{
+    return !empty($_ENV['SMTP_USER']) && !empty($_ENV['SMTP_PASS']);
+}
+
 function sendEmail(string $to, string $toName, string $subject, string $htmlBody, string $altBody = ''): bool
 {
+    if (!mailConfigured()) {
+        return false;
+    }
+
     $vendorAutoload = __DIR__ . '/vendor/autoload.php';
     if (!file_exists($vendorAutoload)) {
         error_log('AgriTrack sendEmail: vendor/autoload.php not found – run composer install');

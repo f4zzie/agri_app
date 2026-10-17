@@ -1,6 +1,4 @@
 <?php
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 require_once __DIR__ . '/../includes/auth_check.php';
 $pageTitle = 'Harvest Reminders';
 
@@ -26,7 +24,7 @@ $successMsg  = flash('success');
 $errorMsg    = flash('danger');
 $remindersSent = false;
 $sentCrops   = [];
-$phpMailerAvailable = file_exists(__DIR__ . '/../vendor/autoload.php');
+$emailDelivered = false;
 
 // ─── Handle POST: Send Reminders ─────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -34,73 +32,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $sentCrops = $upcomingCrops;
 
-    if ($phpMailerAvailable) {
-        // Try to load PHPMailer
-        require_once __DIR__ . '/../vendor/autoload.php';
-
-        if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-            
-
-            try {
-                $mail = new PHPMailer(true);
-                $mail->isSMTP();
-                $mail->Host       = $_ENV['MAIL_HOST']     ?? 'smtp.gmail.com';
-                $mail->SMTPAuth   = true;
-                $mail->Username   = $_ENV['MAIL_USER']     ?? '';
-                $mail->Password   = $_ENV['MAIL_PASS']     ?? '';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port       = (int) ($_ENV['MAIL_PORT'] ?? 587);
-
-                $mail->setFrom($_ENV['MAIL_FROM'] ?? $_ENV['MAIL_USER'] ?? 'noreply@agritrack.app', 'AgriTrack');
-                $mail->addAddress($user['email'], $user['name']);
-
-                $mail->isHTML(true);
-                $mail->Subject = 'AgriTrack — Upcoming Harvest Reminders';
-
-                $cropListHtml = '<ul>';
-                foreach ($upcomingCrops as $c) {
-                    $cropListHtml .= '<li><strong>' . htmlspecialchars($c['name']) . '</strong>';
-                    if (!empty($c['variety'])) {
-                        $cropListHtml .= ' (' . htmlspecialchars($c['variety']) . ')';
-                    }
-                    $cropListHtml .= ' — Harvest: ' . htmlspecialchars($c['expected_harvest']) . '</li>';
-                }
-                $cropListHtml .= '</ul>';
-
-                $mail->Body = '
-                    <html><body style="font-family:sans-serif;color:#333;">
-                    <h2 style="color:#28a745;">🌿 Harvest Reminders — AgriTrack</h2>
-                    <p>Hi ' . htmlspecialchars($user['name']) . ',</p>
-                    <p>The following crops are due for harvest within the next 7 days:</p>
-                    ' . $cropListHtml . '
-                    <p>Log in to <a href="' . ($_ENV['APP_URL'] ?? '#') . '">AgriTrack</a> to update their status.</p>
-                    <hr>
-                    <p style="color:#888;font-size:12px;">Powered by AgriTrack — Agricultural Crop Management System</p>
-                    </body></html>';
-                $mail->AltBody = 'Upcoming harvests: ' . implode(', ', array_column($upcomingCrops, 'name'));
-
-                $mail->send();
-
-                log_activity($uid, 'send_reminders', 'Harvest reminder email sent for ' . count($upcomingCrops) . ' crop(s)');
-                $remindersSent = true;
-                flash('success', 'Reminder emails sent successfully to ' . $user['email'] . '!');
-                header('Location: send_reminders.php');
-                exit;
-
-            } catch (Exception $e) {
-                // Fall through to simulation mode
-                log_activity($uid, 'send_reminders', 'Reminder simulation (SMTP error): ' . count($upcomingCrops) . ' crop(s)');
-                $remindersSent = true;
-            }
-        } else {
-            log_activity($uid, 'send_reminders', 'Reminder simulation (PHPMailer not found): ' . count($upcomingCrops) . ' crop(s)');
-            $remindersSent = true;
+    $cropListHtml = '<ul>';
+    foreach ($upcomingCrops as $c) {
+        $cropListHtml .= '<li><strong>' . htmlspecialchars($c['name']) . '</strong>';
+        if (!empty($c['variety'])) {
+            $cropListHtml .= ' (' . htmlspecialchars($c['variety']) . ')';
         }
-    } else {
-        // Simulation mode — no composer
-        log_activity($uid, 'send_reminders', 'Reminder simulation (no vendor): ' . count($upcomingCrops) . ' crop(s)');
-        $remindersSent = true;
+        $cropListHtml .= ' — Harvest: ' . htmlspecialchars($c['expected_harvest']) . '</li>';
     }
+    $cropListHtml .= '</ul>';
+
+    $body = '<div style="font-family:sans-serif;color:#333;">'
+          . '<h2 style="color:#28a745;">🌿 Harvest Reminders — AgriTrack</h2>'
+          . '<p>Hi ' . htmlspecialchars($user['name']) . ',</p>'
+          . '<p>The following crops are due for harvest within the next 7 days:</p>'
+          . $cropListHtml
+          . '<p>Log in to <a href="' . htmlspecialchars($_ENV['APP_URL'] ?? '#') . '">AgriTrack</a> to update their status.</p>'
+          . '</div>';
+
+    $emailDelivered = mailConfigured()
+        && sendEmail($user['email'], $user['name'], 'AgriTrack — Upcoming Harvest Reminders', $body);
+
+    log_activity(
+        $uid,
+        'send_reminders',
+        ($emailDelivered ? 'Harvest reminder email sent for ' : 'Reminder simulated (email not configured or failed) for ')
+            . count($upcomingCrops) . ' crop(s)'
+    );
+    $remindersSent = true;
 }
 
 $successMsg = flash('success');
@@ -125,7 +84,7 @@ require_once __DIR__ . '/../includes/header.php';
             <?php endif; ?>
 
             <!-- SMTP Note -->
-            <?php if (!$phpMailerAvailable): ?>
+            <?php if (!mailConfigured()): ?>
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle me-2"></i>
                     <strong>Email not configured.</strong>
@@ -142,7 +101,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <i class="bi bi-send-check me-2"></i>Reminders Processed!
                         </h5>
                         <p class="text-muted mb-3">
-                            <?= $phpMailerAvailable ? 'Reminder email sent to <strong>' . htmlspecialchars($user['email']) . '</strong>.' : 'Simulation mode: email not actually sent. Configure SMTP to enable real delivery.' ?>
+                            <?= $emailDelivered ? 'Reminder email sent to <strong>' . htmlspecialchars($user['email']) . '</strong>.' : 'Simulation mode: email not actually sent. Configure SMTP to enable real delivery.' ?>
                         </p>
                         <ul class="list-group list-group-flush">
                             <?php foreach ($sentCrops as $c): ?>

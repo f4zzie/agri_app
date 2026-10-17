@@ -39,44 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':expires' => $expiresAt,
             ]);
 
-            // --- Send reset email if PHPMailer is available ---
-            $vendorAutoload = __DIR__ . '/../vendor/autoload.php';
-            if (file_exists($vendorAutoload)) {
-                require_once $vendorAutoload;
-            }
-
-            if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-                try {
-                    $appUrl   = $_ENV['APP_URL'] ?? 'http://localhost/agri_app';
-                    $resetUrl = $appUrl . '/reset_password.php?token=' . urlencode($token);
-
-                    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-                    $mail->isSMTP();
-                    $mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com';
-                    $mail->SMTPAuth   = true;
-                    $mail->Username   = $_ENV['SMTP_USER'] ?? '';
-                    $mail->Password   = $_ENV['SMTP_PASS'] ?? '';
-                    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port       = (int) ($_ENV['SMTP_PORT'] ?? 587);
-
-                    $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@agritrack.com', 'AgriTrack');
-                    $mail->addAddress($email, $user['name']);
-
-                    $mail->isHTML(true);
-                    $mail->Subject = 'AgriTrack – Password Reset';
-                    $mail->Body    =
-                        '<p>Hello ' . htmlspecialchars($user['name']) . ',</p>' .
-                        '<p>Click the link below to reset your password (expires in 1 hour):</p>' .
-                        '<p><a href="' . $resetUrl . '">' . $resetUrl . '</a></p>' .
-                        '<p>If you did not request a reset, please ignore this email.</p>';
-                    $mail->AltBody =
-                        'Reset your AgriTrack password: ' . $resetUrl;
-
-                    $mail->send();
-                } catch (\Exception $e) {
-                    error_log('Password reset email error: ' . $e->getMessage());
-                }
-            }
+            $appUrl   = $_ENV['APP_URL'] ?? 'http://localhost/agri_app';
+            $resetUrl = $appUrl . '/reset_password.php?token=' . urlencode($token);
+            sendEmail(
+                $email,
+                $user['name'],
+                'AgriTrack – Password Reset',
+                '<p>Hello ' . htmlspecialchars($user['name']) . ',</p>' .
+                '<p>Click the link below to reset your password (expires in 1 hour):</p>' .
+                '<p><a href="' . htmlspecialchars($resetUrl) . '">' . htmlspecialchars($resetUrl) . '</a></p>' .
+                '<p>If you did not request a reset, please ignore this email.</p>',
+                'Reset your AgriTrack password: ' . $resetUrl
+            );
         }
         // Always show the same message to prevent email enumeration
     }
