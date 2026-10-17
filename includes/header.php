@@ -80,11 +80,11 @@ $activePage = $activeFor[$currentPage] ?? $currentPage;
 <div class="d-flex app-body">
     <nav id="sidebar" class="bg-dark text-white flex-shrink-0" aria-label="<?= t('main_menu') ?>">
         <ul class="nav flex-column pt-3">
-            <?php foreach ($nav as [$file, $icon, $label]): ?>
+            <?php foreach ($nav as [$navFile, $navIcon, $navLabel]): // prefixed: pages include this file with their own variables in scope ?>
                 <li class="nav-item">
-                    <a class="nav-link text-white sidebar-link <?= $activePage === $file ? 'active' : '' ?>"
-                       href="<?= $root . $file ?>" <?= $activePage === $file ? 'aria-current="page"' : '' ?>>
-                        <i class="bi <?= $icon ?> me-2"></i><?= t($label) ?>
+                    <a class="nav-link text-white sidebar-link <?= $activePage === $navFile ? 'active' : '' ?>"
+                       href="<?= $root . $navFile ?>" <?= $activePage === $navFile ? 'aria-current="page"' : '' ?>>
+                        <i class="bi <?= $navIcon ?> me-2"></i><?= t($navLabel) ?>
                     </a>
                 </li>
             <?php endforeach; ?>
