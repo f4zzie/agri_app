@@ -256,7 +256,7 @@ All settings are environment variables (`.env` locally; real environment variabl
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Email verification, password reset, notifications. Without them, new accounts start verified. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | “Continue with Google” (button hidden otherwise) |
 | `AT_USERNAME`, `AT_API_KEY`, `AT_SENDER_ID` | SMS via Africa's Talking (`AT_USERNAME=sandbox` for testing) |
-| `DEMO_MODE=1` | Shows the demo logins on the landing and login pages |
+| `DEMO_MODE=1` | Public demo: shows the demo logins on the landing and login pages, locks their password, never sends real email or SMS (even if `SMTP_*`/`AT_*` are set) and auto-verifies new registrations |
 
 ---
 

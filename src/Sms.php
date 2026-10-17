@@ -31,6 +31,9 @@ final class Sms
 
     public static function fromEnv(): ?self
     {
+        if (Demo::enabled()) {
+            return null; // a public demo must not send SMS to visitor-entered numbers
+        }
         $user = $_ENV['AT_USERNAME'] ?? '';
         $key  = $_ENV['AT_API_KEY'] ?? '';
         if ($user === '' || $key === '') {

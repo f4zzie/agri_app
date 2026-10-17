@@ -295,7 +295,9 @@ function login_user(array $user): void
 // ---------------------------------------------------------------------------
 function mailConfigured(): bool
 {
-    return !empty($_ENV['SMTP_USER']) && !empty($_ENV['SMTP_PASS']);
+    // A public demo never sends mail, so it behaves as if SMTP were not set up
+    // (new accounts are auto-verified, reset links are not delivered).
+    return !App\Demo::enabled() && !empty($_ENV['SMTP_USER']) && !empty($_ENV['SMTP_PASS']);
 }
 
 function googleOAuthConfigured(): bool
@@ -306,12 +308,20 @@ function googleOAuthConfigured(): bool
 /** Send an SMS if Africa's Talking is configured; silently skipped otherwise. */
 function sendSms(?string $phone, string $message): bool
 {
+    if (App\Demo::enabled()) {
+        error_log('AgriTrack demo mode: SMS not sent (' . mb_strlen($message) . ' chars)');
+        return false;
+    }
     $sms = App\Sms::fromEnv();
     return $sms !== null && $phone !== null && $phone !== '' && $sms->send($phone, $message);
 }
 
 function sendEmail(string $to, string $toName, string $subject, string $htmlBody, string $altBody = ''): bool
 {
+    if (App\Demo::enabled()) {
+        error_log('AgriTrack demo mode: email not sent: ' . $subject);
+        return false;
+    }
     if (!mailConfigured()) {
         return false;
     }
