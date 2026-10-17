@@ -172,6 +172,23 @@ function lang_url(string $lang): string
 }
 
 // ---------------------------------------------------------------------------
+// 4c. counties() / categories() – reference data, id => name
+// ---------------------------------------------------------------------------
+function counties(): array
+{
+    static $rows = null;
+    return $rows ??= getDB()->query('SELECT id, name FROM counties ORDER BY name')
+                            ->fetchAll(PDO::FETCH_KEY_PAIR);
+}
+
+function categories(): array
+{
+    static $rows = null;
+    return $rows ??= getDB()->query('SELECT id, name FROM categories ORDER BY id')
+                            ->fetchAll(PDO::FETCH_KEY_PAIR);
+}
+
+// ---------------------------------------------------------------------------
 // 5. csrf_token() – generate / return CSRF token
 // ---------------------------------------------------------------------------
 function csrf_token(): string

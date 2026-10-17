@@ -23,8 +23,10 @@ if ($role === 'farmer') {
     $pendingInquiries = (int)$stmt->fetchColumn();
 
     $stmt = $db->prepare(
-        "SELECT c.*, COALESCE((SELECT COUNT(*) FROM inquiries WHERE crop_id=c.id),0) AS inquiry_count
-         FROM crops c WHERE c.user_id=? ORDER BY c.created_at DESC"
+        "SELECT c.*, cat.name AS category,
+                COALESCE((SELECT COUNT(*) FROM inquiries WHERE crop_id=c.id),0) AS inquiry_count
+         FROM crops c LEFT JOIN categories cat ON cat.id=c.category_id
+         WHERE c.user_id=? ORDER BY c.created_at DESC"
     );
     $stmt->execute([$uid]);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -49,12 +51,13 @@ if ($role === 'farmer') {
     $stmt->execute([$uid]);
     $myInquiries = (int)$stmt->fetchColumn();
 
-    $stmt = $db->query("SELECT COUNT(DISTINCT county) FROM users WHERE role='farmer' AND county IS NOT NULL AND county!=''");
+    $stmt = $db->query("SELECT COUNT(DISTINCT county_id) FROM users WHERE role='farmer'");
     $countiesCount = (int)$stmt->fetchColumn();
 
     $latestStmt = $db->query(
-        "SELECT c.*, u.name AS farmer_name, u.county AS farmer_county
+        "SELECT c.*, u.name AS farmer_name, co.name AS farmer_county
          FROM crops c JOIN users u ON c.user_id=u.id
+         LEFT JOIN counties co ON co.id=u.county_id
          WHERE u.role='farmer' AND c.status='available'
          ORDER BY c.created_at DESC LIMIT 6"
     );

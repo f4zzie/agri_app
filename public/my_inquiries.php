@@ -47,10 +47,11 @@ if ($userRole === 'farmer') {
     // Fetch
     $stmt = $db->prepare(
         "SELECT i.*, c.name AS crop_name, u.name AS buyer_name,
-                u.email AS buyer_email, u.phone AS buyer_phone, u.county AS buyer_county
+                u.email AS buyer_email, u.phone AS buyer_phone, co.name AS buyer_county
          FROM inquiries i
          JOIN crops c ON i.crop_id = c.id
          JOIN users u ON i.buyer_id = u.id
+         LEFT JOIN counties co ON co.id = u.county_id
          WHERE i.farmer_id = ?
          ORDER BY i.created_at DESC
          LIMIT ? OFFSET ?"
@@ -69,10 +70,11 @@ if ($userRole === 'farmer') {
 
     $stmt = $db->prepare(
         "SELECT i.*, c.name AS crop_name, u.name AS farmer_name,
-                u.email AS farmer_email, u.phone AS farmer_phone, u.county AS farmer_county
+                u.email AS farmer_email, u.phone AS farmer_phone, co.name AS farmer_county
          FROM inquiries i
          JOIN crops c ON i.crop_id = c.id
          JOIN users u ON i.farmer_id = u.id
+         LEFT JOIN counties co ON co.id = u.county_id
          WHERE i.buyer_id = ?
          ORDER BY i.created_at DESC
          LIMIT ? OFFSET ?"

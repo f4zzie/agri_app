@@ -20,13 +20,12 @@ if (!$crop) {
     header('Location: dashboard.php'); exit;
 }
 
-$categories = ['Grains & Cereals','Vegetables','Fruits','Dairy & Eggs','Meat & Poultry','Herbs & Spices','Legumes & Pulses','Roots & Tubers','Other'];
 $units      = ['kg','bag','crate','litre','dozen','piece','tonne','bundle'];
 $errors     = [];
 
 $formData = [
     'name'     => $crop['name'],
-    'category' => $crop['category'] ?? '',
+    'category' => $crop['category_id'] ?? '',
     'price'    => $crop['price']    ?? '',
     'unit'     => $crop['unit']     ?? 'kg',
     'quantity' => $crop['quantity'] ?? '',
@@ -68,12 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         $stmt = $db->prepare(
-            "UPDATE crops SET name=?, category=?, price=?, unit=?, quantity=?, status=?, notes=?, image=?
+            "UPDATE crops SET name=?, category_id=?, price=?, unit=?, quantity=?, status=?, notes=?, image=?
              WHERE id=? AND user_id=?"
         );
         $stmt->execute([
             $formData['name'],
-            $formData['category'] ?: null,
+            isset(categories()[(int)$formData['category']]) ? (int)$formData['category'] : null,
             $formData['price']    !== '' ? $formData['price']    : null,
             $formData['unit'],
             $formData['quantity'] !== '' ? $formData['quantity'] : null,
@@ -127,9 +126,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <label for="category" class="form-label fw-semibold">Category</label>
                         <select class="form-select" id="category" name="category">
                             <option value="">-- Select --</option>
-                            <?php foreach ($categories as $cat): ?>
-                                <option value="<?= htmlspecialchars($cat) ?>" <?= $formData['category']===$cat?'selected':'' ?>>
-                                    <?= htmlspecialchars($cat) ?>
+                            <?php foreach (categories() as $catId => $catName): ?>
+                                <option value="<?= $catId ?>" <?= (string)$formData['category']===(string)$catId?'selected':'' ?>>
+                                    <?= htmlspecialchars($catName) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

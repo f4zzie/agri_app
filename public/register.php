@@ -50,8 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Enter a valid phone number.';
     }
 
-    $validCounties = ['Mombasa','Kwale','Kilifi','Tana River','Lamu','Taita-Taveta','Garissa','Wajir','Mandera','Marsabit','Isiolo','Meru','Tharaka-Nithi','Embu','Kitui','Machakos','Makueni','Nyandarua','Nyeri','Kirinyaga',"Murang'a",'Kiambu','Turkana','West Pokot','Samburu','Trans Nzoia','Uasin Gishu','Elgeyo-Marakwet','Nandi','Baringo','Laikipia','Nakuru','Narok','Kajiado','Kericho','Bomet','Kakamega','Vihiga','Bungoma','Busia','Siaya','Kisumu','Homa Bay','Migori','Kisii','Nyamira','Nairobi'];
-    if (!empty($county) && !in_array($county, $validCounties)) {
+    if ($county !== '' && !isset(counties()[(int) $county])) {
         $errors[] = 'Please select a valid county.';
     }
 
@@ -74,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $role              = in_array($role ?? '', ['farmer','buyer']) ? $role : 'farmer';
 
         $stmt = $db->prepare(
-            'INSERT INTO users (name, email, password_hash, phone, county, role, email_verified, verification_token)
+            'INSERT INTO users (name, email, password_hash, phone, county_id, role, email_verified, verification_token)
              VALUES (:name, :email, :hash, :phone, :county, :role, 0, :token)'
         );
         $stmt->execute([
@@ -82,13 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':email'  => $email,
             ':hash'   => $passwordHash,
             ':phone'  => $phone,
-            ':county' => $county,
+            ':county' => $county !== '' ? (int) $county : null,
             ':role'   => $role,
             ':token'  => $verificationToken,
         ]);
 
         $newUserId = (int) $db->lastInsertId();
-        log_activity($newUserId, 'register', "New {$role} registered" . ($county ? " from {$county}" : ''));
+        log_activity($newUserId, 'register', "New {$role} registered" . ($county !== '' ? ' from ' . counties()[(int) $county] : ''));
 
         // --- Send welcome / verification email ---
         $appUrl     = $_ENV['APP_URL'] ?? 'http://localhost/agri_app';
@@ -252,20 +251,9 @@ $roleVal      = htmlspecialchars($_POST['role'] ?? 'farmer');
                     <label for="county" class="form-label">County</label>
                     <select class="form-select" id="county" name="county">
                         <option value="">-- Select County --</option>
-                        <?php
-                        $counties = ['Mombasa','Kwale','Kilifi','Tana River','Lamu','Taita-Taveta',
-                                     'Garissa','Wajir','Mandera','Marsabit','Isiolo','Meru',
-                                     'Tharaka-Nithi','Embu','Kitui','Machakos','Makueni','Nyandarua',
-                                     'Nyeri','Kirinyaga',"Murang'a",'Kiambu','Turkana','West Pokot',
-                                     'Samburu','Trans Nzoia','Uasin Gishu','Elgeyo-Marakwet','Nandi',
-                                     'Baringo','Laikipia','Nakuru','Narok','Kajiado','Kericho','Bomet',
-                                     'Kakamega','Vihiga','Bungoma','Busia','Siaya','Kisumu','Homa Bay',
-                                     'Migori','Kisii','Nyamira','Nairobi'];
-                        foreach ($counties as $c):
-                            $sel = ($countyVal === $c) ? 'selected' : '';
-                        ?>
-                            <option value="<?= htmlspecialchars($c) ?>" <?= $sel ?>>
-                                <?= htmlspecialchars($c) ?>
+                        <?php foreach (counties() as $cid => $cname): ?>
+                            <option value="<?= $cid ?>" <?= $countyVal === (string) $cid ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cname) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

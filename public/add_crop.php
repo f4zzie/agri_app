@@ -5,7 +5,6 @@ $pageTitle = 'List a Product';
 $db  = getDB();
 $uid = $_SESSION['user_id'];
 
-$categories = ['Grains & Cereals','Vegetables','Fruits','Dairy & Eggs','Meat & Poultry','Herbs & Spices','Legumes & Pulses','Roots & Tubers','Other'];
 $units      = ['kg','bag','crate','litre','dozen','piece','tonne','bundle'];
 
 $errors   = [];
@@ -42,13 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         $stmt = $db->prepare(
-            "INSERT INTO crops (user_id, name, category, price, unit, quantity, status, notes, image, created_at)
+            "INSERT INTO crops (user_id, name, category_id, price, unit, quantity, status, notes, image, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())"
         );
         $stmt->execute([
             $uid,
             $formData['name'],
-            $formData['category'] ?: null,
+            isset(categories()[(int)$formData['category']]) ? (int)$formData['category'] : null,
             $formData['price']    !== '' ? $formData['price']    : null,
             $formData['unit'],
             $formData['quantity'] !== '' ? $formData['quantity'] : null,
@@ -106,9 +105,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <label for="category" class="form-label fw-semibold">Category</label>
                         <select class="form-select" id="category" name="category">
                             <option value="">-- Select --</option>
-                            <?php foreach ($categories as $cat): ?>
-                                <option value="<?= htmlspecialchars($cat) ?>" <?= $formData['category']===$cat?'selected':'' ?>>
-                                    <?= htmlspecialchars($cat) ?>
+                            <?php foreach (categories() as $catId => $catName): ?>
+                                <option value="<?= $catId ?>" <?= (string)$formData['category']===(string)$catId?'selected':'' ?>>
+                                    <?= htmlspecialchars($catName) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

@@ -10,7 +10,7 @@ $userRole  = $_SESSION['role'] ?? 'farmer';
 $pageTitle = 'Marketplace';
 
 // --- Filters ---
-$filterCounty = trim($_GET['county'] ?? '');
+$filterCounty = (int)($_GET['county'] ?? 0);
 $filterStatus = trim($_GET['status'] ?? '');
 $search       = trim($_GET['q']      ?? '');
 $page         = max(1, (int)($_GET['page'] ?? 1));
@@ -27,8 +27,8 @@ if ($search !== '') {
     $params[':q2']    = "%{$search}%";
     $params[':q3']    = "%{$search}%";
 }
-if ($filterCounty !== '') {
-    $where[]             = 'u.county = :county';
+if ($filterCounty > 0) {
+    $where[]             = 'u.county_id = :county';
     $params[':county']   = $filterCounty;
 }
 $validStatuses = ['planted','growing','harvested','failed'];
@@ -47,10 +47,11 @@ $totalProducts = (int)$countStmt->fetchColumn();
 $totalPages    = max(1, (int)ceil($totalProducts / $perPage));
 
 // Products
-$sql   = "SELECT c.*, u.name AS farmer_name, u.county AS farmer_county,
+$sql   = "SELECT c.*, u.name AS farmer_name, co.name AS farmer_county,
                  u.phone AS farmer_phone, u.id AS farmer_user_id
           FROM crops c
           JOIN users u ON c.user_id = u.id
+          LEFT JOIN counties co ON co.id = u.county_id
           $whereSQL
           ORDER BY c.created_at DESC
           LIMIT :limit OFFSET :offset";
@@ -62,8 +63,11 @@ $stmt->execute();
 $products = $stmt->fetchAll();
 
 // Counties for filter
-$countiesStmt = $db->query("SELECT DISTINCT county FROM users WHERE role='farmer' AND county IS NOT NULL AND county != '' ORDER BY county");
-$counties     = $countiesStmt->fetchAll(PDO::FETCH_COLUMN);
+$countiesStmt = $db->query(
+    "SELECT DISTINCT co.id, co.name FROM counties co JOIN users u ON u.county_id = co.id
+     WHERE u.role='farmer' ORDER BY co.name"
+);
+$counties     = $countiesStmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
 $statusColors = ['planted'=>'primary','growing'=>'success','harvested'=>'warning','failed'=>'danger'];
 
@@ -87,9 +91,9 @@ require_once __DIR__ . '/../includes/header.php';
             <label class="form-label small fw-semibold mb-1">County</label>
             <select name="county" class="form-select form-select-sm">
                 <option value="">All Counties</option>
-                <?php foreach ($counties as $c): ?>
-                    <option value="<?= htmlspecialchars($c) ?>" <?= $filterCounty === $c ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($c) ?>
+                <?php foreach ($counties as $cid => $cname): ?>
+                    <option value="<?= $cid ?>" <?= $filterCounty === $cid ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cname) ?>
                     </option>
                 <?php endforeach; ?>
             </select>

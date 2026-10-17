@@ -25,9 +25,10 @@ if (!$cropId) {
 // Fetch crop + farmer info
 $stmt = $db->prepare(
     "SELECT c.*, u.name AS farmer_name, u.email AS farmer_email,
-            u.county AS farmer_county, u.phone AS farmer_phone
+            co.name AS farmer_county, u.phone AS farmer_phone
      FROM crops c
      JOIN users u ON c.user_id = u.id
+     LEFT JOIN counties co ON co.id = u.county_id
      WHERE c.id = ? AND u.role = 'farmer'"
 );
 $stmt->execute([$cropId]);
