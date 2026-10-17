@@ -95,33 +95,49 @@ final class Inquiries
      */
     public static function open(PDO $db, int $cropId, int $buyerId, string $message, ?string $contactPhone): int
     {
-        $db->beginTransaction();
-        try {
+        return self::atomically($db, static function () use ($db, $cropId, $buyerId, $message, $contactPhone): int {
             $db->prepare('INSERT INTO inquiries (crop_id, buyer_id, contact_phone) VALUES (?, ?, ?)')
                ->execute([$cropId, $buyerId, $contactPhone !== '' ? $contactPhone : null]);
             $id = (int) $db->lastInsertId();
             $db->prepare('INSERT INTO messages (inquiry_id, sender_id, body) VALUES (?, ?, ?)')
                ->execute([$id, $buyerId, $message]);
-            $db->commit();
             return $id;
-        } catch (\Throwable $e) {
-            $db->rollBack();
-            throw $e;
-        }
+        });
     }
 
     /**
      * Append a message and move the thread status, atomically.
+     *
+     * @param array<string,mixed> $thread
      */
     public static function reply(PDO $db, array $thread, int $senderId, string $role, string $body): void
     {
-        $db->beginTransaction();
-        try {
+        self::atomically($db, static function () use ($db, $thread, $senderId, $role, $body): void {
             $db->prepare('INSERT INTO messages (inquiry_id, sender_id, body) VALUES (?, ?, ?)')
                ->execute([$thread['id'], $senderId, $body]);
             $db->prepare('UPDATE inquiries SET status = ? WHERE id = ?')
-               ->execute([self::statusAfterMessage($role, $thread['status']), $thread['id']]);
+               ->execute([self::statusAfterMessage($role, (string) $thread['status']), $thread['id']]);
+        });
+    }
+
+    /**
+     * Run $work in a transaction. If the caller already opened one, join it
+     * (the caller commits or rolls back) instead of failing on a nested BEGIN.
+     *
+     * @template T
+     * @param callable(): T $work
+     * @return T
+     */
+    private static function atomically(PDO $db, callable $work): mixed
+    {
+        if ($db->inTransaction()) {
+            return $work();
+        }
+        $db->beginTransaction();
+        try {
+            $result = $work();
             $db->commit();
+            return $result;
         } catch (\Throwable $e) {
             $db->rollBack();
             throw $e;

@@ -117,13 +117,26 @@ function getDB(): PDO
 }
 
 // ---------------------------------------------------------------------------
+// 2b. ensure_session() – start the session for web requests. Under the CLI
+//     (migrations, seeding, tests) $_SESSION is a plain array instead.
+// ---------------------------------------------------------------------------
+function ensure_session(): void
+{
+    if (PHP_SAPI === 'cli') {
+        $_SESSION ??= [];
+        return;
+    }
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
+// ---------------------------------------------------------------------------
 // 3. setLang() – determine active language and store in session
 // ---------------------------------------------------------------------------
 function setLang(): void
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
 
     $allowed = ['en', 'sw'];
 
@@ -141,23 +154,15 @@ function setLang(): void
 // ---------------------------------------------------------------------------
 function t(string $key): string
 {
-    static $strings = null;
+    static $strings = [];
 
-    if ($strings === null) {
-        $lang    = $_SESSION['lang'] ?? 'en';
-        $file    = __DIR__ . "/lang/{$lang}.php";
-        $fallback = __DIR__ . '/lang/en.php';
-
-        if (file_exists($file)) {
-            $strings = require $file;
-        } elseif (file_exists($fallback)) {
-            $strings = require $fallback;
-        } else {
-            $strings = [];
-        }
+    $lang = $_SESSION['lang'] ?? 'en';
+    if (!isset($strings[$lang])) {
+        $file = __DIR__ . "/lang/{$lang}.php";
+        $strings[$lang] = is_file($file) ? require $file : require __DIR__ . '/lang/en.php';
     }
 
-    return $strings[$key] ?? $key;
+    return $strings[$lang][$key] ?? $key;
 }
 
 // ---------------------------------------------------------------------------
@@ -193,9 +198,7 @@ function categories(): array
 // ---------------------------------------------------------------------------
 function csrf_token(): string
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
 
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -207,12 +210,15 @@ function csrf_token(): string
 // ---------------------------------------------------------------------------
 // 6. csrf_verify() – verify CSRF token from POST, die on mismatch
 // ---------------------------------------------------------------------------
+function csrf_is_valid(mixed $posted): bool
+{
+    $stored = $_SESSION['csrf_token'] ?? '';
+    return is_string($posted) && $stored !== '' && hash_equals($stored, $posted);
+}
+
 function csrf_verify(): void
 {
-    $posted = $_POST['csrf_token'] ?? '';
-    $stored = $_SESSION['csrf_token'] ?? '';
-
-    if (!hash_equals($stored, $posted)) {
+    if (!csrf_is_valid($_POST['csrf_token'] ?? null)) {
         http_response_code(403);
         die('<div style="font-family:sans-serif;padding:20px;color:red;">
                <strong>403 – Invalid CSRF token.</strong> Please go back and try again.
@@ -249,9 +255,7 @@ function log_activity(int $user_id, string $action, string $details = ''): void
 // ---------------------------------------------------------------------------
 function flash(string $key, ?string $msg = null): ?string
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
 
     if ($msg !== null) {
         // Setter
@@ -270,9 +274,7 @@ function flash(string $key, ?string $msg = null): ?string
 // ---------------------------------------------------------------------------
 function isLoggedIn(): bool
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session();
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
