@@ -31,7 +31,7 @@ A normalised schema evolved through versioned migrations, with CHECK constraints
 
 ## What I built
 
-[WRITE 2–3 SENTENCES: e.g. 'This started as a group project for a university database course. I designed the schema and migrations, wrote the inquiry/messaging feature and the price-trends queries, and set up CI. Teammates built X and Y.']
+agri_app is an agricultural application centered on farm-related data and workflows. It provides a simple interface for interacting with that information. The app is intended to make common agricultural tasks easier to carry out.
 
 ---
 
