@@ -301,6 +301,13 @@ function googleOAuthConfigured(): bool
     return !empty($_ENV['GOOGLE_CLIENT_ID']) && !empty($_ENV['GOOGLE_CLIENT_SECRET']);
 }
 
+/** Send an SMS if Africa's Talking is configured; silently skipped otherwise. */
+function sendSms(?string $phone, string $message): bool
+{
+    $sms = App\Sms::fromEnv();
+    return $sms !== null && $phone !== null && $phone !== '' && $sms->send($phone, $message);
+}
+
 function sendEmail(string $to, string $toName, string $subject, string $htmlBody, string $altBody = ''): bool
 {
     if (!mailConfigured()) {

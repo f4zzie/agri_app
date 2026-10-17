@@ -417,4 +417,9 @@ return [
     'feat_b2'                  => 'Contact farmers directly, by message or WhatsApp',
     'feat_b3'                  => 'Farmer ratings from completed deals',
     'feat_b4'                  => 'Compare prices across counties',
+
+    // ── WhatsApp ──────────────────────────────────────────────────────────────
+    'whatsapp'                 => 'WhatsApp',
+    'wa_about'                 => 'Hello, I saw your %s on AgriTrack.',
+    'wa_hello_farmer'          => 'Hello, I found you on AgriTrack.',
 ];

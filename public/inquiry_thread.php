@@ -44,6 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . '<p><a href="' . e($appUrl . '/inquiry_thread.php?id=' . $id) . '">Open the conversation →</a></p>'
             );
 
+            sendSms(
+                $isFarmer ? ($thread['contact_phone'] ?: $thread['buyer_phone']) : $thread['farmer_phone'],
+                "AgriTrack: new message from {$_SESSION['name']} about {$thread['crop_name']}: "
+                    . mb_substr($body, 0, 80) . (mb_strlen($body) > 80 ? '…' : '') . " {$appUrl}/inquiry_thread.php?id={$id}"
+            );
+
             header('Location: inquiry_thread.php?id=' . $id . '#latest');
             exit;
         }
@@ -152,6 +158,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <li><i class="bi bi-telephone me-1"></i><a href="tel:<?= e($other['phone']) ?>"><?= e($other['phone']) ?></a></li>
                     <?php endif; ?>
                 </ul>
+                <div class="mt-2"><?= whatsapp_button($other['phone'], sprintf(t('wa_about'), $thread['crop_name'])) ?></div>
             </div>
         </div>
 

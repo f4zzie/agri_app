@@ -64,3 +64,14 @@ function product_emoji(?string $category): string
         'Meat & Poultry' => '🐔', 'Herbs & Spices' => '🌶️', 'Legumes & Pulses' => '🫘', 'Roots & Tubers' => '🥔',
     ][$category ?? ''] ?? '🌿';
 }
+
+/** Green WhatsApp button (empty string when the number is not a Kenyan mobile). */
+function whatsapp_button(?string $phone, string $message, string $classes = 'btn btn-sm btn-whatsapp'): string
+{
+    $url = App\Phone::whatsappUrl($phone, $message);
+    if ($url === null) {
+        return '';
+    }
+    return '<a href="' . e($url) . '" class="' . e($classes) . '" target="_blank" rel="noopener">'
+         . '<i class="bi bi-whatsapp me-1"></i>' . e(t('whatsapp')) . '</a>';
+}

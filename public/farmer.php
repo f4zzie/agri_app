@@ -8,7 +8,7 @@ $db       = getDB();
 $farmerId = (int) ($_GET['id'] ?? 0);
 
 $stmt = $db->prepare(
-    "SELECT u.id, u.name, u.avatar, u.created_at, co.name AS county,
+    "SELECT u.id, u.name, u.avatar, u.phone, u.created_at, co.name AS county,
             fr.avg_rating, COALESCE(fr.rating_count, 0) AS rating_count,
             (SELECT COUNT(*) FROM v_inquiry_threads t
               WHERE t.farmer_id = u.id AND t.status = 'completed') AS deals_completed
@@ -72,6 +72,9 @@ $stars  = static fn (float $s): string => str_repeat('★', (int) round($s)) . s
                 <div class="small text-muted"><?= t('no_ratings_yet') ?></div>
             <?php endif; ?>
             <div class="small text-muted"><?= sprintf(t('deals_completed'), (int) $farmer['deals_completed']) ?></div>
+            <?php if (($_SESSION['role'] ?? '') === 'buyer'): ?>
+                <div class="mt-2"><?= whatsapp_button($farmer['phone'], t('wa_hello_farmer')) ?></div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

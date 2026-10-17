@@ -192,9 +192,12 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                 <small class="text-muted"><?= date('d M Y', strtotime($p['created_at'])) ?></small>
                 <?php if ($userRole === 'buyer' && $p['status'] === 'available'): ?>
-                    <a href="inquiry.php?crop_id=<?= (int) $p['id'] ?>" class="btn btn-success btn-sm">
-                        <i class="bi bi-chat me-1"></i><?= t('contact_farmer') ?>
-                    </a>
+                    <div class="d-flex gap-1">
+                        <?= whatsapp_button($p['farmer_phone'], sprintf(t('wa_about'), $p['name']), 'btn btn-sm btn-whatsapp px-2') ?>
+                        <a href="inquiry.php?crop_id=<?= (int) $p['id'] ?>" class="btn btn-success btn-sm">
+                            <i class="bi bi-chat me-1"></i><?= t('contact_farmer') ?>
+                        </a>
+                    </div>
                 <?php else: ?>
                     <a href="view_crop.php?id=<?= (int) $p['id'] ?>" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-eye me-1"></i><?= t('view') ?>

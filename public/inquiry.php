@@ -69,6 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             . '<p><a href="' . e($appUrl . '/inquiry_thread.php?id=' . $inquiryId) . '">Reply in AgriTrack →</a></p>'
         );
 
+        sendSms(
+            $crop['farmer_phone'],
+            "AgriTrack: {$_SESSION['name']} asked about your {$crop['name']}. Reply: {$appUrl}/inquiry_thread.php?id={$inquiryId}"
+        );
+
         flash('success', t('inquiry_sent'));
         header('Location: inquiry_thread.php?id=' . $inquiryId);
         exit;

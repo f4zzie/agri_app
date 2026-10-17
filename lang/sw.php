@@ -416,4 +416,9 @@ return [
     'feat_b2'                  => 'Wasiliana na wakulima moja kwa moja, kwa ujumbe au WhatsApp',
     'feat_b3'                  => 'Alama za wakulima kutoka biashara zilizokamilika',
     'feat_b4'                  => 'Linganisha bei kati ya kaunti',
+
+    // ── WhatsApp ──────────────────────────────────────────────────────────────
+    'whatsapp'                 => 'WhatsApp',
+    'wa_about'                 => 'Habari, nimeona %s yako kwenye AgriTrack.',
+    'wa_hello_farmer'          => 'Habari, nimekupata kwenye AgriTrack.',
 ];

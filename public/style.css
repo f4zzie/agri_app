@@ -254,3 +254,7 @@ body {
         linear-gradient(135deg, rgba(10,50,20,.88) 35%, rgba(20,80,40,.55)),
         url('assets/farm_hero_bg.jpg') center / cover no-repeat;
 }
+
+/* WhatsApp brand button */
+.btn-whatsapp { background: #25d366; color: #fff; border: 0; }
+.btn-whatsapp:hover, .btn-whatsapp:focus { background: #1ebe57; color: #fff; }
