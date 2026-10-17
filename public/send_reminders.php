@@ -1,68 +1,58 @@
 <?php
 require_once __DIR__ . '/../includes/auth_check.php';
-$pageTitle = 'Harvest Reminders';
+require_role('farmer');
+$pageTitle = t('harvest_reminders');
 
 $db  = getDB();
-$uid = $_SESSION['user_id'];
+$uid = (int) $_SESSION['user_id'];
 
-// Fetch crops with harvest in next 7 days
+// Crops still in the ground whose expected harvest is within 7 days.
+// Harvested / failed crops (or crops without a tracked stage) need no reminder.
 $stmt = $db->prepare(
     "SELECT * FROM crops
-     WHERE user_id = ?
-       AND expected_harvest BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-     ORDER BY expected_harvest ASC"
+      WHERE user_id = ?
+        AND growth_stage IN ('planted', 'growing')
+        AND expected_harvest BETWEEN CURDATE() AND CURDATE() + INTERVAL 7 DAY
+      ORDER BY expected_harvest ASC"
 );
 $stmt->execute([$uid]);
-$upcomingCrops = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$upcomingCrops = $stmt->fetchAll();
 
-// Fetch user email
-$userStmt = $db->prepare("SELECT name, email FROM users WHERE id = ?");
+$userStmt = $db->prepare('SELECT name, email FROM users WHERE id = ?');
 $userStmt->execute([$uid]);
-$user = $userStmt->fetch(PDO::FETCH_ASSOC);
+$user = $userStmt->fetch();
 
-$successMsg  = flash('success');
-$errorMsg    = flash('danger');
-$remindersSent = false;
-$sentCrops   = [];
+$remindersSent  = false;
 $emailDelivered = false;
 
-// ─── Handle POST: Send Reminders ─────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
 
-    $sentCrops = $upcomingCrops;
-
-    $cropListHtml = '<ul>';
+    $items = '';
     foreach ($upcomingCrops as $c) {
-        $cropListHtml .= '<li><strong>' . htmlspecialchars($c['name']) . '</strong>';
-        if (!empty($c['variety'])) {
-            $cropListHtml .= ' (' . htmlspecialchars($c['variety']) . ')';
-        }
-        $cropListHtml .= ' — Harvest: ' . htmlspecialchars($c['expected_harvest']) . '</li>';
+        $items .= '<li><strong>' . e($c['name']) . '</strong>'
+                . (!empty($c['variety']) ? ' (' . e($c['variety']) . ')' : '')
+                . ' — ' . e($c['expected_harvest']) . '</li>';
     }
-    $cropListHtml .= '</ul>';
-
     $body = '<div style="font-family:sans-serif;color:#333;">'
           . '<h2 style="color:#28a745;">🌿 Harvest Reminders — AgriTrack</h2>'
-          . '<p>Hi ' . htmlspecialchars($user['name']) . ',</p>'
+          . '<p>Hi ' . e($user['name']) . ',</p>'
           . '<p>The following crops are due for harvest within the next 7 days:</p>'
-          . $cropListHtml
-          . '<p>Log in to <a href="' . htmlspecialchars($_ENV['APP_URL'] ?? '#') . '">AgriTrack</a> to update their status.</p>'
+          . '<ul>' . $items . '</ul>'
+          . '<p>Log in to <a href="' . e($_ENV['APP_URL'] ?? '#') . '">AgriTrack</a> to update their stage.</p>'
           . '</div>';
 
-    $emailDelivered = mailConfigured()
+    $emailDelivered = !empty($upcomingCrops)
         && sendEmail($user['email'], $user['name'], 'AgriTrack — Upcoming Harvest Reminders', $body);
 
     log_activity(
         $uid,
         'send_reminders',
-        ($emailDelivered ? 'Harvest reminder email sent for ' : 'Reminder simulated (email not configured or failed) for ')
+        ($emailDelivered ? 'Harvest reminder email sent for ' : 'Reminder simulated (email not configured) for ')
             . count($upcomingCrops) . ' crop(s)'
     );
     $remindersSent = true;
 }
-
-$successMsg = flash('success');
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -71,113 +61,67 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="row justify-content-center">
         <div class="col-lg-8">
 
-            <h1 class="h3 fw-bold mb-1 text-success">
-                <i class="bi bi-bell me-2"></i>Harvest Reminders
-            </h1>
-            <p class="text-muted mb-4">Crops with harvest dates in the next 7 days.</p>
+            <h1 class="h3 fw-bold mb-1 text-success"><i class="bi bi-bell me-2"></i><?= t('harvest_reminders') ?></h1>
+            <p class="text-muted mb-4"><?= t('harvest_reminders_sub') ?></p>
 
-            <?php if ($successMsg): ?>
-                <div class="alert alert-success alert-dismissible fade show">
-                    <i class="bi bi-check-circle me-2"></i><?= htmlspecialchars($successMsg) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
-
-            <!-- SMTP Note -->
             <?php if (!mailConfigured()): ?>
                 <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>
-                    <strong>Email not configured.</strong>
-                    Run <code>composer install</code> and configure SMTP settings in <code>.env</code> to enable real email delivery.
-                    Reminders will be <em>simulated</em> and logged.
+                    <i class="bi bi-info-circle me-2"></i><?= t('email_not_configured_simulated') ?>
                 </div>
             <?php endif; ?>
 
-            <!-- Sent Result -->
-            <?php if ($remindersSent && !empty($sentCrops)): ?>
-                <div class="card border-0 shadow-sm border-start border-4 border-success mb-4">
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold text-success mb-3">
-                            <i class="bi bi-send-check me-2"></i>Reminders Processed!
-                        </h5>
-                        <p class="text-muted mb-3">
-                            <?= $emailDelivered ? 'Reminder email sent to <strong>' . htmlspecialchars($user['email']) . '</strong>.' : 'Simulation mode: email not actually sent. Configure SMTP to enable real delivery.' ?>
-                        </p>
-                        <ul class="list-group list-group-flush">
-                            <?php foreach ($sentCrops as $c): ?>
-                            <li class="list-group-item px-0 py-2 border-bottom">
-                                <i class="bi bi-tree text-success me-2"></i>
-                                <strong><?= htmlspecialchars($c['name']) ?></strong>
-                                <?php if (!empty($c['variety'])): ?>
-                                    <span class="text-muted">(<?= htmlspecialchars($c['variety']) ?>)</span>
-                                <?php endif; ?>
-                                <span class="badge bg-warning text-dark ms-2">
-                                    Harvest: <?= htmlspecialchars($c['expected_harvest']) ?>
-                                </span>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
+            <?php if ($remindersSent && !empty($upcomingCrops)): ?>
+                <div class="alert <?= $emailDelivered ? 'alert-success' : 'alert-warning' ?>">
+                    <i class="bi bi-send-check me-2"></i>
+                    <?= $emailDelivered
+                        ? sprintf(t('reminder_sent_to'), '<strong>' . e($user['email']) . '</strong>')
+                        : t('reminder_simulated') ?>
                 </div>
-            <?php elseif ($remindersSent && empty($sentCrops)): ?>
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-circle me-2"></i>
-                    No crops are due for harvest in the next 7 days. Nothing to remind.
-                </div>
+            <?php elseif ($remindersSent): ?>
+                <div class="alert alert-warning"><?= t('no_harvest_due') ?></div>
             <?php endif; ?>
 
-            <!-- Upcoming Crops List -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0 fw-semibold">
-                        <i class="bi bi-calendar-week me-2 text-warning"></i>
-                        Crops Due in Next 7 Days
+                    <h2 class="h5 mb-0 fw-semibold">
+                        <i class="bi bi-calendar-week me-2 text-warning"></i><?= t('crops_due_7d') ?>
                         <span class="badge bg-warning text-dark ms-2"><?= count($upcomingCrops) ?></span>
-                    </h5>
+                    </h2>
                 </div>
                 <div class="card-body p-0">
                     <?php if (empty($upcomingCrops)): ?>
-                        <div class="text-center py-5">
+                        <div class="text-center py-5 px-3">
                             <i class="bi bi-calendar-check fs-1 text-muted"></i>
-                            <p class="text-muted mt-3 mb-0">No crops are due for harvest in the next 7 days.</p>
+                            <p class="text-muted mt-3 mb-0"><?= t('no_harvest_due') ?></p>
+                            <p class="text-muted small mb-0"><?= t('reminders_need_stage') ?></p>
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Crop Name</th>
-                                        <th>Variety</th>
-                                        <th>Status</th>
-                                        <th>Expected Harvest</th>
-                                        <th>Days Remaining</th>
+                                        <th><?= t('product') ?></th>
+                                        <th><?= t('variety') ?></th>
+                                        <th><?= t('growth_stage') ?></th>
+                                        <th><?= t('expected_harvest') ?></th>
+                                        <th><?= t('days_remaining') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($upcomingCrops as $c): ?>
-                                    <?php
-                                    $harvestDate = new DateTime($c['expected_harvest']);
-                                    $today       = new DateTime('today');
-                                    $daysLeft    = (int) $today->diff($harvestDate)->days;
-                                    ?>
+                                <?php foreach ($upcomingCrops as $c):
+                                    $daysLeft = (int) (new DateTime('today'))->diff(new DateTime($c['expected_harvest']))->days; ?>
                                     <tr>
-                                        <td class="fw-semibold"><?= htmlspecialchars($c['name']) ?></td>
-                                        <td><?= htmlspecialchars($c['variety'] ?? '—') ?></td>
-                                        <td>
-                                            <?php
-                                            $statusBadge = ['planted'=>'primary','growing'=>'success','harvested'=>'warning','failed'=>'danger'];
-                                            $b = $statusBadge[$c['status']] ?? 'secondary';
-                                            ?>
-                                            <span class="badge bg-<?= $b ?> text-capitalize"><?= htmlspecialchars($c['status']) ?></span>
-                                        </td>
-                                        <td><?= htmlspecialchars($c['expected_harvest']) ?></td>
+                                        <td class="fw-semibold"><?= e($c['name']) ?></td>
+                                        <td><?= e($c['variety'] ?? '—') ?></td>
+                                        <td><?= stage_badge($c['growth_stage']) ?></td>
+                                        <td><?= e($c['expected_harvest']) ?></td>
                                         <td>
                                             <span class="badge <?= $daysLeft <= 2 ? 'bg-danger' : 'bg-warning text-dark' ?>">
-                                                <?= $daysLeft === 0 ? 'Today!' : $daysLeft . ' day' . ($daysLeft !== 1 ? 's' : '') ?>
+                                                <?= $daysLeft === 0 ? t('today') : sprintf(t('n_days'), $daysLeft) ?>
                                             </span>
                                         </td>
                                     </tr>
-                                    <?php endforeach; ?>
+                                <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -185,28 +129,19 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <!-- Send Button -->
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <h5 class="fw-semibold mb-2">
-                        <i class="bi bi-envelope me-2 text-success"></i>Send Reminder Emails
-                    </h5>
-                    <p class="text-muted small mb-3">
-                        Sends a reminder email to <strong><?= htmlspecialchars($user['email']) ?></strong>
-                        listing all crops due for harvest in the next 7 days.
-                    </p>
+                    <h2 class="h5 fw-semibold mb-2"><i class="bi bi-envelope me-2 text-success"></i><?= t('send_reminder_emails') ?></h2>
+                    <p class="text-muted small mb-3"><?= sprintf(t('reminder_explainer'), '<strong>' . e($user['email']) . '</strong>') ?></p>
                     <?php if (!empty($upcomingCrops)): ?>
                         <form method="POST" action="send_reminders.php">
                             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                             <button type="submit" class="btn btn-success" id="sendRemindersBtn">
-                                <i class="bi bi-send me-1"></i>
-                                Send Reminder Emails (<?= count($upcomingCrops) ?> crop<?= count($upcomingCrops) !== 1 ? 's' : '' ?>)
+                                <i class="bi bi-send me-1"></i><?= t('send_reminder_emails') ?> (<?= count($upcomingCrops) ?>)
                             </button>
                         </form>
                     <?php else: ?>
-                        <button class="btn btn-secondary" disabled>
-                            <i class="bi bi-send me-1"></i>No crops to remind
-                        </button>
+                        <button class="btn btn-secondary" disabled><i class="bi bi-send me-1"></i><?= t('nothing_to_remind') ?></button>
                     <?php endif; ?>
                 </div>
             </div>

@@ -1,232 +1,156 @@
 <?php
-use Dompdf\Dompdf;
-use Dompdf\Options;
 require_once __DIR__ . '/../includes/auth_check.php';
-require_once __DIR__ . '/../config.php';
+require_role('farmer');
 
 $db  = getDB();
-$uid = $_SESSION['user_id'];
+$uid = (int) $_SESSION['user_id'];
+$format = $_GET['format'] ?? '';
 
-// ─── CSV Download ─────────────────────────────────────────────────────────────
-if (isset($_GET['format']) && $_GET['format'] === 'csv') {
-    $stmt = $db->prepare("SELECT id, name, variety, planting_date, expected_harvest, status, notes, created_at FROM crops WHERE user_id = ? ORDER BY created_at DESC");
+$fetchCrops = static function () use ($db, $uid): array {
+    $stmt = $db->prepare(
+        'SELECT c.id, c.name, c.variety, cat.name AS category, c.price, c.unit, c.quantity,
+                c.status, c.growth_stage, c.planting_date, c.expected_harvest, c.notes, c.created_at
+           FROM crops c LEFT JOIN categories cat ON cat.id = c.category_id
+          WHERE c.user_id = ? ORDER BY c.created_at DESC'
+    );
     $stmt->execute([$uid]);
-    $crops = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt->fetchAll();
+};
 
+// ─── CSV ──────────────────────────────────────────────────────────────────────
+if ($format === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="agritrack_crops_' . date('Y-m-d') . '.csv"');
-    header('Pragma: no-cache');
-    header('Expires: 0');
+    header('Content-Disposition: attachment; filename="agritrack_products_' . date('Y-m-d') . '.csv"');
+    header('Cache-Control: no-store');
 
     $out = fopen('php://output', 'w');
-    // BOM for Excel UTF-8 compatibility
-    fputs($out, "\xEF\xBB\xBF");
+    fwrite($out, "\xEF\xBB\xBF"); // BOM so Excel reads UTF-8
 
-    fputcsv($out, ['ID', 'Crop Name', 'Variety', 'Planting Date', 'Expected Harvest', 'Status', 'Notes', 'Created At']);
-    foreach ($crops as $crop) {
-        fputcsv($out, [
-            $crop['id'],
-            $crop['name'],
-            $crop['variety'] ?? '',
-            $crop['planting_date'] ?? '',
-            $crop['expected_harvest'] ?? '',
-            $crop['status'],
-            $crop['notes'] ?? '',
-            $crop['created_at'],
-        ]);
+    fputcsv($out, ['ID', 'Name', 'Variety', 'Category', 'Price (KES)', 'Unit', 'Quantity', 'Availability',
+                   'Growth stage', 'Planting date', 'Expected harvest', 'Notes', 'Listed at'], ',', '"', '\\');
+    foreach ($fetchCrops() as $c) {
+        // Prefix cells that a spreadsheet would treat as formulas (CSV injection)
+        $row = array_map(static fn ($v) => is_string($v) && preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v, array_values($c));
+        fputcsv($out, $row, ',', '"', '\\');
     }
     fclose($out);
     exit;
 }
 
-// ─── PDF Download ─────────────────────────────────────────────────────────────
-if (isset($_GET['format']) && $_GET['format'] === 'pdf') {
-    $stmt = $db->prepare("SELECT * FROM crops WHERE user_id = ? ORDER BY created_at DESC");
-    $stmt->execute([$uid]);
-    $crops = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// ─── PDF (Dompdf if installed, otherwise a print-friendly page) ───────────────
+if ($format === 'pdf') {
+    $crops = $fetchCrops();
+
+    $rowsHtml = '';
+    foreach ($crops as $i => $c) {
+        $rowsHtml .= '<tr><td>' . ($i + 1) . '</td><td>' . e($c['name']) . '</td><td>' . e($c['variety'] ?? '—')
+                   . '</td><td>' . format_price($c['price'], $c['unit']) . '</td><td>' . e(t('status_' . $c['status']))
+                   . '</td><td>' . e($c['growth_stage'] ? t($c['growth_stage']) : '—') . '</td><td>' . e($c['expected_harvest'] ?? '—') . '</td></tr>';
+    }
+    $tableHtml = '<table class="table table-bordered"><thead class="table-success"><tr><th>#</th><th>' . e(t('product'))
+               . '</th><th>' . e(t('variety')) . '</th><th>' . e(t('price')) . '</th><th>' . e(t('availability'))
+               . '</th><th>' . e(t('growth_stage')) . '</th><th>' . e(t('expected_harvest')) . '</th></tr></thead><tbody>'
+               . $rowsHtml . '</tbody></table>';
 
     $autoload = __DIR__ . '/../vendor/autoload.php';
-    if (file_exists($autoload)) {
-     require_once $autoload;
+    if (is_file($autoload)) {
+        require_once $autoload;
     }
-    $dompdfAvailable = class_exists('Dompdf\Dompdf');
 
-    if ($dompdfAvailable) {
-        
-
-        $options = new Options();
+    if (class_exists(\Dompdf\Dompdf::class)) {
+        $options = new \Dompdf\Options();
         $options->set('defaultFont', 'DejaVu Sans');
-        $dompdf = new Dompdf($options);
-
-        $html = '<!DOCTYPE html><html><head><meta charset="UTF-8">
-            <style>
-                body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #333; }
-                h1 { color: #28a745; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th { background-color: #28a745; color: white; padding: 8px; text-align: left; }
-                td { padding: 7px 8px; border-bottom: 1px solid #ddd; }
-                tr:nth-child(even) td { background-color: #f9f9f9; }
-                .footer { margin-top: 30px; font-size: 10px; color: #888; text-align: center; }
-            </style></head><body>';
-        $html .= '<h1>AgriTrack — Crop Report</h1>';
-        $html .= '<p>Generated: ' . date('Y-m-d H:i') . '</p>';
-        $html .= '<table><thead><tr>
-            <th>#</th><th>Name</th><th>Variety</th><th>Status</th>
-            <th>Planting Date</th><th>Expected Harvest</th>
-        </tr></thead><tbody>';
-        $i = 1;
-        foreach ($crops as $crop) {
-            $html .= '<tr>';
-            $html .= '<td>' . $i++ . '</td>';
-            $html .= '<td>' . htmlspecialchars($crop['name']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($crop['variety'] ?? '—') . '</td>';
-            $html .= '<td>' . htmlspecialchars(ucfirst($crop['status'])) . '</td>';
-            $html .= '<td>' . htmlspecialchars($crop['planting_date'] ?? '—') . '</td>';
-            $html .= '<td>' . htmlspecialchars($crop['expected_harvest'] ?? '—') . '</td>';
-            $html .= '</tr>';
-        }
-        $html .= '</tbody></table><div class="footer">Powered by AgriTrack — Agricultural Crop Management System</div></body></html>';
-
-        $dompdf->loadHtml($html);
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml(
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+                body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #333; }
+                h1 { color: #198754; }
+                table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+                th { background: #198754; color: #fff; padding: 6px; text-align: left; }
+                td { padding: 6px; border-bottom: 1px solid #ddd; }
+                .footer { margin-top: 30px; font-size: 9px; color: #888; text-align: center; }
+             </style></head><body>'
+            . '<h1>AgriTrack — ' . e(t('product_report')) . '</h1>'
+            . '<p>' . e($_SESSION['name'] ?? '') . ' · ' . date('Y-m-d H:i') . '</p>'
+            . $tableHtml
+            . '<div class="footer">' . e(t('powered_by')) . '</div></body></html>'
+        );
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
-        $dompdf->stream('agritrack_crops_' . date('Y-m-d') . '.pdf', ['Attachment' => true]);
-        exit;
-    } else {
-        // Print-friendly fallback
-        $stmt = $db->prepare("SELECT * FROM crops WHERE user_id = ? ORDER BY created_at DESC");
-        $stmt->execute([$uid]);
-        $crops = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        ?>
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>AgriTrack — Crop Report</title>
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-            <style>
-                @media print { .no-print { display: none !important; } body { padding: 20px; } }
-                body { font-family: 'Segoe UI', sans-serif; }
-            </style>
-        </head>
-        <body>
-        <div class="container py-4">
-            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-                <h2 class="text-success">AgriTrack — Crop Report</h2>
-                <div>
-                    <button onclick="window.print()" class="btn btn-success me-2">
-                        <i class="bi bi-printer me-1"></i> Print
-                    </button>
-                    <a href="export.php" class="btn btn-outline-secondary">Back</a>
-                </div>
-            </div>
-            <div class="alert alert-info no-print">
-                <strong>Note:</strong> Run <code>composer install</code> to enable PDF download. Showing print-friendly page instead.
-            </div>
-            <h2 class="text-success d-none d-print-block">AgriTrack — Crop Report</h2>
-            <p class="text-muted">Generated: <?= date('Y-m-d H:i') ?></p>
-            <table class="table table-bordered">
-                <thead class="table-success">
-                    <tr>
-                        <th>#</th><th>Name</th><th>Variety</th><th>Status</th>
-                        <th>Planting Date</th><th>Expected Harvest</th><th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $i = 1; foreach ($crops as $crop): ?>
-                    <tr>
-                        <td><?= $i++ ?></td>
-                        <td><?= htmlspecialchars($crop['name']) ?></td>
-                        <td><?= htmlspecialchars($crop['variety'] ?? '—') ?></td>
-                        <td><?= htmlspecialchars(ucfirst($crop['status'])) ?></td>
-                        <td><?= htmlspecialchars($crop['planting_date'] ?? '—') ?></td>
-                        <td><?= htmlspecialchars($crop['expected_harvest'] ?? '—') ?></td>
-                        <td><?= htmlspecialchars($crop['notes'] ?? '—') ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-        </body></html>
-        <?php
+        $dompdf->stream('agritrack_products_' . date('Y-m-d') . '.pdf', ['Attachment' => true]);
         exit;
     }
+    ?>
+    <!DOCTYPE html>
+    <html lang="<?= e($_SESSION['lang'] ?? 'en') ?>">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AgriTrack — <?= t('product_report') ?></title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+        <style>@media print { .no-print { display: none !important; } }</style>
+    </head>
+    <body>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+            <h1 class="h3 text-success">AgriTrack — <?= t('product_report') ?></h1>
+            <div>
+                <button onclick="window.print()" class="btn btn-success me-2"><i class="bi bi-printer me-1"></i><?= t('print') ?></button>
+                <a href="export.php" class="btn btn-outline-secondary"><?= t('back') ?></a>
+            </div>
+        </div>
+        <div class="alert alert-info no-print"><?= t('pdf_needs_composer') ?></div>
+        <h1 class="h3 text-success d-none d-print-block">AgriTrack — <?= t('product_report') ?></h1>
+        <p class="text-muted"><?= e($_SESSION['name'] ?? '') ?> · <?= date('Y-m-d H:i') ?></p>
+        <?= $tableHtml ?>
+    </div>
+    </body></html>
+    <?php
+    exit;
 }
 
-// ─── Export Page (HTML) ───────────────────────────────────────────────────────
-$pageTitle = 'Export Data';
-require_once __DIR__ . '/../includes/header.php';
+// ─── Export page ──────────────────────────────────────────────────────────────
+$pageTitle       = t('export_data');
+$dompdfAvailable = is_file(__DIR__ . '/../vendor/dompdf/dompdf/src/Dompdf.php');
 
-$dompdfAvailable = file_exists(__DIR__ . '/../vendor/autoload.php');
-
-$stmt = $db->prepare("SELECT COUNT(*) FROM crops WHERE user_id = ?");
+$stmt = $db->prepare('SELECT COUNT(*) FROM crops WHERE user_id = ?');
 $stmt->execute([$uid]);
-$totalCrops = $stmt->fetchColumn();
+$totalCrops = (int) $stmt->fetchColumn();
+
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-7">
+            <h1 class="h3 fw-bold mb-4 text-success"><i class="bi bi-download me-2"></i><?= t('export_data') ?></h1>
 
-            <h1 class="h3 fw-bold mb-4 text-success">
-                <i class="bi bi-download me-2"></i>Export Data
-            </h1>
-
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0 fw-semibold">
-                        <i class="bi bi-database me-2 text-success"></i>Your Crop Data
-                    </h5>
-                </div>
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <p class="text-muted">
-                        You have <strong><?= $totalCrops ?></strong> crop(s) in your records. Export them using one of the options below.
-                    </p>
-
+                    <p class="text-muted"><?= sprintf(t('export_count'), $totalCrops) ?></p>
                     <div class="row g-3">
-                        <!-- CSV -->
                         <div class="col-md-6">
                             <div class="border rounded p-4 text-center h-100 d-flex flex-column align-items-center justify-content-center">
                                 <i class="bi bi-filetype-csv display-4 text-success mb-3"></i>
-                                <h6 class="fw-bold">Download CSV</h6>
-                                <p class="text-muted small mb-3">Opens in Excel, Google Sheets, or any spreadsheet app.</p>
-                                <a href="export.php?format=csv" class="btn btn-success w-100" id="csvDownloadBtn">
-                                    <i class="bi bi-download me-1"></i> Download CSV
-                                </a>
+                                <h2 class="h6 fw-bold"><?= t('download_csv') ?></h2>
+                                <p class="text-muted small mb-3"><?= t('csv_hint') ?></p>
+                                <a href="export.php?format=csv" class="btn btn-success w-100"><i class="bi bi-download me-1"></i><?= t('download_csv') ?></a>
                             </div>
                         </div>
-
-                        <!-- PDF -->
                         <div class="col-md-6">
                             <div class="border rounded p-4 text-center h-100 d-flex flex-column align-items-center justify-content-center">
                                 <i class="bi bi-filetype-pdf display-4 text-danger mb-3"></i>
-                                <h6 class="fw-bold">Download PDF</h6>
-                                <?php if ($dompdfAvailable): ?>
-                                    <p class="text-muted small mb-3">Nicely formatted PDF report of all your crops.</p>
-                                    <a href="export.php?format=pdf" class="btn btn-danger w-100" id="pdfDownloadBtn">
-                                        <i class="bi bi-download me-1"></i> Download PDF
-                                    </a>
-                                <?php else: ?>
-                                    <p class="text-muted small mb-3">Print-friendly page available. Run <code>composer install</code> to enable PDF download.</p>
-                                    <a href="export.php?format=pdf" class="btn btn-outline-danger w-100" id="pdfPrintBtn">
-                                        <i class="bi bi-printer me-1"></i> Print / View Report
-                                    </a>
-                                <?php endif; ?>
+                                <h2 class="h6 fw-bold"><?= t('download_pdf') ?></h2>
+                                <p class="text-muted small mb-3"><?= $dompdfAvailable ? t('pdf_hint') : t('pdf_needs_composer') ?></p>
+                                <a href="export.php?format=pdf" class="btn <?= $dompdfAvailable ? 'btn-danger' : 'btn-outline-danger' ?> w-100">
+                                    <i class="bi <?= $dompdfAvailable ? 'bi-download' : 'bi-printer' ?> me-1"></i><?= $dompdfAvailable ? t('download_pdf') : t('print_report') ?>
+                                </a>
                             </div>
                         </div>
                     </div>
-
-                    <?php if (!$dompdfAvailable): ?>
-                        <div class="alert alert-info mt-3 mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Enable PDF generation:</strong> Run <code>composer install</code> in your project directory to install dompdf.
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
-
         </div>
     </div>
 </div>

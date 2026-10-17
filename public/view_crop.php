@@ -1,79 +1,51 @@
 <?php
+/**
+ * AgriTrack – view_crop.php
+ * Public product page (the QR code on a farmer's packaging links here).
+ * Shows listing details only — no farmer contact data for anonymous visitors.
+ */
 require_once __DIR__ . '/../config.php';
 
-$cropId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$cropId = (int) ($_GET['id'] ?? 0);
 
-if (!$cropId) {
-    http_response_code(404);
-    die('Crop not found.');
-}
-
-$db = getDB();
-$stmt = $db->prepare("SELECT * FROM crops WHERE id = ?");
+$stmt = getDB()->prepare(
+    'SELECT c.*, u.name AS farmer_name, co.name AS farmer_county, cat.name AS category
+       FROM crops c
+       JOIN users u ON u.id = c.user_id
+       LEFT JOIN counties co    ON co.id  = u.county_id
+       LEFT JOIN categories cat ON cat.id = c.category_id
+      WHERE c.id = ?'
+);
 $stmt->execute([$cropId]);
-$crop = $stmt->fetch(PDO::FETCH_ASSOC);
+$crop = $stmt->fetch();
 
 if (!$crop) {
     http_response_code(404);
-    die('Crop not found.');
 }
 
-$statusMap = [
-    'planted'   => ['label' => 'Planted',   'color' => 'primary'],
-    'growing'   => ['label' => 'Growing',   'color' => 'success'],
-    'harvested' => ['label' => 'Harvested', 'color' => 'warning'],
-    'failed'    => ['label' => 'Failed',    'color' => 'danger'],
-];
-$statusInfo = $statusMap[$crop['status']] ?? ['label' => ucfirst($crop['status']), 'color' => 'secondary'];
+$img         = $crop ? upload_url($crop['image']) : null;
+$currentLang = $_SESSION['lang'] ?? 'en';
+$isBuyer     = isLoggedIn() && ($_SESSION['role'] ?? '') === 'buyer';
+
+$row = static function (string $icon, string $label, string $valueHtml): void { ?>
+    <div class="detail-row">
+        <span class="detail-label"><i class="bi <?= $icon ?> me-2 text-muted"></i><?= e($label) ?></span>
+        <span><?= $valueHtml ?></span>
+    </div>
+<?php };
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= e($currentLang) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($crop['name']) ?> — AgriTrack</title>
-    <meta name="description" content="View details for <?= htmlspecialchars($crop['name']) ?> on AgriTrack.">
+    <title><?= $crop ? e($crop['name']) : t('product_not_found') ?> — <?= t('app_name') ?></title>
+    <?php if ($crop): ?>
+        <meta name="description" content="<?= e($crop['name'] . ' — ' . ($crop['farmer_county'] ?? 'Kenya')) ?> on AgriTrack.">
+    <?php endif; ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .crop-header {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-        }
-        .crop-image {
-            width: 100%;
-            max-height: 350px;
-            object-fit: cover;
-            border-radius: 0.5rem;
-        }
-        .detail-row {
-            display: flex;
-            align-items: flex-start;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        .detail-label {
-            font-weight: 600;
-            color: #495057;
-            min-width: 160px;
-            flex-shrink: 0;
-        }
-        .powered-footer {
-            text-align: center;
-            color: #adb5bd;
-            font-size: 0.82rem;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid #dee2e6;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -81,86 +53,71 @@ $statusInfo = $statusMap[$crop['status']] ?? ['label' => ucfirst($crop['status']
     <div class="row justify-content-center">
         <div class="col-lg-7 col-md-9">
 
+            <div class="d-flex justify-content-end gap-1 mb-2">
+                <a href="<?= lang_url('en') ?>" class="btn btn-sm <?= $currentLang === 'en' ? 'btn-success' : 'btn-outline-success' ?>"><?= t('english') ?></a>
+                <a href="<?= lang_url('sw') ?>" class="btn btn-sm <?= $currentLang === 'sw' ? 'btn-success' : 'btn-outline-success' ?>"><?= t('swahili') ?></a>
+            </div>
+
+            <?php if (!$crop): ?>
+                <div class="alert alert-warning"><?= t('product_not_found') ?></div>
+            <?php else: ?>
             <div class="card border-0 shadow">
-                <!-- Card Header -->
                 <div class="card-header crop-header py-4 rounded-top">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
                         <div>
-                            <h1 class="h3 fw-bold mb-1">
-                                <i class="bi bi-tree me-2"></i><?= htmlspecialchars($crop['name']) ?>
-                            </h1>
+                            <h1 class="h3 fw-bold mb-1"><i class="bi bi-basket me-2"></i><?= e($crop['name']) ?></h1>
                             <?php if (!empty($crop['variety'])): ?>
-                                <p class="mb-0 opacity-75">Variety: <?= htmlspecialchars($crop['variety']) ?></p>
+                                <p class="mb-0 opacity-75"><?= t('variety') ?>: <?= e($crop['variety']) ?></p>
                             <?php endif; ?>
                         </div>
-                        <span class="badge bg-white text-<?= $statusInfo['color'] ?> fs-6 px-3 py-2">
-                            <?= $statusInfo['label'] ?>
-                        </span>
+                        <span class="badge bg-white text-success fs-6 px-3 py-2"><?= format_price($crop['price'], $crop['unit']) ?></span>
                     </div>
                 </div>
 
                 <div class="card-body p-4">
-                    <!-- Crop Image -->
-                    <?php if (!empty($crop['image']) && file_exists(__DIR__ . '/uploads/' . $crop['image'])): ?>
-                        <img src="uploads/<?= htmlspecialchars($crop['image']) ?>"
-                             alt="<?= htmlspecialchars($crop['name']) ?>"
-                             class="crop-image mb-4">
-                    <?php else: ?>
-                        <div class="bg-light rounded d-flex align-items-center justify-content-center mb-4"
-                             style="height:180px;">
-                            <div class="text-center text-muted">
-                                <i class="bi bi-image fs-1"></i>
-                                <p class="mt-2 mb-0">No image available</p>
-                            </div>
-                        </div>
+                    <?php if ($img): ?>
+                        <img src="<?= e($img) ?>" alt="<?= e($crop['name']) ?>" class="crop-image mb-4">
                     <?php endif; ?>
 
-                    <!-- Details -->
-                    <div class="detail-row">
-                        <span class="detail-label"><i class="bi bi-circle-fill text-<?= $statusInfo['color'] ?> me-2 small"></i>Status</span>
-                        <span>
-                            <span class="badge bg-<?= $statusInfo['color'] ?>"><?= $statusInfo['label'] ?></span>
-                        </span>
-                    </div>
+                    <?php
+                    $row('bi-shop', t('availability'), status_badge($crop['status']) . ' ' . stage_badge($crop['growth_stage']));
+                    $row('bi-person', t('farmer'), e($crop['farmer_name']) . ($crop['farmer_county'] ? ' · ' . e($crop['farmer_county']) : ''));
+                    if ($crop['category']) {
+                        $row('bi-tag', t('category'), e(t_category($crop['category'])));
+                    }
+                    if ($crop['quantity'] !== null) {
+                        $row('bi-box-seam', t('quantity_available'), (int) $crop['quantity'] . ' ' . e(t('unit_' . $crop['unit'])));
+                    }
+                    if ($crop['planting_date']) {
+                        $row('bi-calendar-event', t('planting_date'), e(date('j M Y', strtotime($crop['planting_date']))));
+                    }
+                    if ($crop['expected_harvest']) {
+                        $row('bi-calendar-check', t('expected_harvest'), e(date('j M Y', strtotime($crop['expected_harvest']))));
+                    }
+                    if ($crop['notes']) {
+                        $row('bi-card-text', t('description'), nl2br(e($crop['notes'])));
+                    }
+                    $row('bi-clock', t('listed_on'), e(date('j M Y', strtotime($crop['created_at']))));
+                    ?>
 
-                    <?php if (!empty($crop['planting_date'])): ?>
-                    <div class="detail-row">
-                        <span class="detail-label"><i class="bi bi-calendar-event me-2 text-muted"></i>Planting Date</span>
-                        <span><?= htmlspecialchars(date('F j, Y', strtotime($crop['planting_date']))) ?></span>
+                    <div class="mt-4 d-grid">
+                        <?php if ($isBuyer && $crop['status'] === 'available'): ?>
+                            <a href="inquiry.php?crop_id=<?= (int) $crop['id'] ?>" class="btn btn-success"><i class="bi bi-chat me-1"></i><?= t('contact_farmer') ?></a>
+                        <?php elseif (!isLoggedIn()): ?>
+                            <a href="register.php" class="btn btn-outline-success"><?= t('register_to_contact') ?></a>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
-
-                    <?php if (!empty($crop['expected_harvest'])): ?>
-                    <div class="detail-row">
-                        <span class="detail-label"><i class="bi bi-calendar-check me-2 text-muted"></i>Expected Harvest</span>
-                        <span><?= htmlspecialchars(date('F j, Y', strtotime($crop['expected_harvest']))) ?></span>
-                    </div>
-                    <?php endif; ?>
-
-                    <?php if (!empty($crop['notes'])): ?>
-                    <div class="detail-row">
-                        <span class="detail-label"><i class="bi bi-card-text me-2 text-muted"></i>Notes</span>
-                        <span><?= nl2br(htmlspecialchars($crop['notes'])) ?></span>
-                    </div>
-                    <?php endif; ?>
-
-                    <div class="detail-row">
-                        <span class="detail-label"><i class="bi bi-clock me-2 text-muted"></i>Added On</span>
-                        <span><?= htmlspecialchars(date('F j, Y', strtotime($crop['created_at']))) ?></span>
-                    </div>
-
                 </div>
             </div>
+            <?php endif; ?>
 
             <div class="powered-footer">
-                <i class="bi bi-leaf me-1"></i>
-                Powered by <strong>AgriTrack</strong> — Agricultural Crop Management System
+                <i class="bi bi-flower1 me-1"></i><?= t('powered_by') ?>
             </div>
 
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

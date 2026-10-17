@@ -135,10 +135,38 @@ body {
 
 /* ---------- Dashboard Hero Banner ---------- */
 .dash-hero {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
     box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    transition: transform 0.2s ease;
+    background: url('assets/farm_hero_bg.jpg') center / cover no-repeat;
 }
-.dash-hero:hover { transform: translateY(-2px); }
+.dash-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+.dash-hero-farmer::before { background: linear-gradient(135deg, rgba(10,50,20,0.85) 40%, rgba(20,80,40,0.55)); }
+.dash-hero-buyer::before  { background: linear-gradient(135deg, rgba(10,30,60,0.85) 40%, rgba(20,60,100,0.55)); background-position: center 60%; }
+.dash-hero-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    margin-bottom: .25rem;
+    text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.dash-hero-sub { color: rgba(255,255,255,.85); margin: 0; }
+.dash-hero-btn {
+    background: #fff;
+    font-weight: 700;
+    border-radius: 50px;
+    padding: 10px 28px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.25);
+}
+.dash-hero-btn:hover { background: #f1f1f1; }
 
 /* ---------- Premium Stat Cards ---------- */
 .stat-card {
@@ -158,3 +186,24 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
+
+/* ---------- Public product page ---------- */
+.crop-header { background: linear-gradient(135deg, #198754, #20c997); color: #fff; }
+.crop-image { width: 100%; max-height: 350px; object-fit: cover; border-radius: .5rem; }
+.detail-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1rem;
+    padding: .75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-weight: 600; color: #495057; min-width: 160px; }
+.powered-footer {
+    text-align: center;
+    color: #6c757d;
+    font-size: .82rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}

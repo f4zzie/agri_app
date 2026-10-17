@@ -330,6 +330,8 @@ function sendEmail(string $to, string $toName, string $subject, string $htmlBody
     }
 }
 
+require_once __DIR__ . '/includes/helpers.php';
+
 // ---------------------------------------------------------------------------
 // Auto-initialisation
 // ---------------------------------------------------------------------------
