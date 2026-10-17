@@ -7,7 +7,7 @@
 
 Smallholder farmers list produce; hotels, shops and schools buy directly from them, with no broker in the middle. Buyers and farmers agree deals in an in-app conversation (or on WhatsApp), rate each other after delivery, and see what the market is actually paying per county.
 
-Built for **SCO 207: Database Systems**, so the database is the core of the project: a normalised schema evolved through versioned migrations, with CHECK constraints, views, triggers, transactions and indexes justified by `EXPLAIN` measurements.
+A normalised schema evolved through versioned migrations, with CHECK constraints, views, triggers, transactions and indexes justified by `EXPLAIN` measurements.
 
 ![AgriTrack demo](docs/screenshots/demo.gif)
 
@@ -32,8 +32,7 @@ Built for **SCO 207: Database Systems**, so the database is the core of the proj
 
 ## What I built
 
-> **TODO (author): this was a group project. Replace this note with which parts you personally designed and wrote — interviewers will ask.** For example: “I designed the schema and migrations, wrote the inquiry/messaging feature and the price-trends queries, and set up CI.”
-
+> **TODO (author): this was a group project. 
 ---
 
 ## Features
@@ -297,26 +296,6 @@ docs/            EXPLAIN.md, screenshots/
 docker/          entrypoint and Apache config
 ```
 
----
 
-## SCO 207 report
 
-`tools/generate_report.php` builds the coursework report (`SCO_207_Group_Project_Report.docx`) from the current design: schema, normalisation, constraints, views, triggers, index measurements, pseudo-code, testing and limitations.
 
-1. Put your group's names and registration numbers in `$students` at the top of the script (it warns while the placeholders are still there).
-2. Run `php tools/generate_report.php`.
-3. Open the document in Word and replace each red `[SCREENSHOT: …]` line with the matching image from `docs/screenshots/` (including `er-diagram.png`).
-
----
-
-## Limitations and roadmap
-
-- **Disease check is not automated.** It stores the photo and shows a guide; an image-recognition model could be added.
-- **No in-app payment.** Deals are paid outside the app; M-Pesa (Daraja) deposits are the natural next step.
-- **SMS** is unit-tested with a fake transport but has not been run against the live Africa's Talking API.
-- **Docker** files have been reviewed and their start-up logic tested, but the image has not yet been built in CI.
-- Product names are free text, so price trends group by lower-cased name; a product reference table would make trends more robust.
-
----
-
-*SCO 207 Database Systems — group project, 2026.*
