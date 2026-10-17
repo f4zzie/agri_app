@@ -32,7 +32,8 @@ A normalised schema evolved through versioned migrations, with CHECK constraints
 
 ## What I built
 
-> **TODO (author): this was a group project. 
+[WRITE 2–3 SENTENCES: e.g. 'This started as a group project for a university database course. I designed the schema and migrations, wrote the inquiry/messaging feature and the price-trends queries, and set up CI. Teammates built X and Y.']
+
 ---
 
 ## Features
