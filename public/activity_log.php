@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth_check.php';
 $pageTitle = 'Activity Log';
-require_once __DIR__ . '/../includes/header.php';
 
 $db  = getDB();
 $uid = $_SESSION['user_id'];
@@ -54,6 +53,8 @@ $actionLabels = [
     'logout'          => 'Logout',
     'send_inquiry'    => 'Send Inquiry',
 ];
+
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="container py-4">

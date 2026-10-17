@@ -1,7 +1,6 @@
-<?php ob_start();
+<?php
 require_once __DIR__ . '/../includes/auth_check.php';
 $pageTitle = 'List a Product';
-require_once __DIR__ . '/../includes/header.php';
 
 $db  = getDB();
 $uid = $_SESSION['user_id'];
@@ -63,6 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
+
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="container py-4">

@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth_check.php';
 $pageTitle = 'QR Code';
-require_once __DIR__ . '/../includes/header.php';
 
 $db  = getDB();
 $uid = $_SESSION['user_id'];
@@ -29,6 +28,8 @@ $appUrl = rtrim($_ENV['APP_URL'] ?? 'http://localhost/agri_app', '/');
 $viewUrl = $appUrl . '/view_crop.php?id=' . $crop['id'];
 $qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($viewUrl);
 $qrDownloadUrl = $qrApiUrl . '&download=1';
+
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="container py-4">
