@@ -25,7 +25,6 @@ A normalised schema evolved through versioned migrations, with CHECK constraints
 - [Getting started](#getting-started)
 - [Testing and quality](#testing-and-quality)
 - [Project structure](#project-structure)
-- [SCO 207 report](#sco-207-report)
 - [Limitations and roadmap](#limitations-and-roadmap)
 
 ---
@@ -296,7 +295,3 @@ tests/           Unit/, Integration/, smoke.sh
 docs/            EXPLAIN.md, screenshots/
 docker/          entrypoint and Apache config
 ```
-
-
-
-
