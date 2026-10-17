@@ -148,6 +148,10 @@ jobs:
             "302 "*dashboard.php) ;;
             *) echo "Expected a 302 to dashboard.php"; exit 1 ;;
           esac
+      - name: Demo account password is locked (DEMO_MODE=1)
+        env:
+          B: http://localhost:8080
+        run: tests/demo_lock.sh "$B"
       - name: Container logs
         if: failure()
         run: docker compose logs

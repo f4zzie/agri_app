@@ -30,6 +30,14 @@ if (!$resetRecord) {
     exit;
 }
 
+$owner = getDB()->prepare('SELECT email FROM users WHERE id = ?');
+$owner->execute([$resetRecord['user_id']]);
+if (App\Demo::isProtectedAccount($owner->fetchColumn() ?: null)) {
+    flash('warning', t('demo_account_locked'));
+    header('Location: login.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
 
