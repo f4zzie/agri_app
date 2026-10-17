@@ -23,7 +23,7 @@ $userStmt->execute([$uid]);
 $user = $userStmt->fetch(PDO::FETCH_ASSOC);
 
 $successMsg  = flash('success');
-$errorMsg    = flash('error');
+$errorMsg    = flash('danger');
 $remindersSent = false;
 $sentCrops   = [];
 $phpMailerAvailable = file_exists(__DIR__ . '/../vendor/autoload.php');

@@ -13,7 +13,7 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 $profileErrors   = [];
 $passwordErrors  = [];
 $successMsg      = flash('success');
-$errorMsg        = flash('error');
+$errorMsg        = flash('danger');
 
 // ─── Handle Profile Update ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'profile') {
