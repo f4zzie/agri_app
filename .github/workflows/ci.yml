@@ -108,6 +108,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: docker build
         run: docker build -t agritrack .
+      - name: Image PHP has the PHP2Shell fixes (>= 8.3.36) and upload progress off
+        run: |
+          docker run --rm --entrypoint php agritrack -r '
+            echo PHP_VERSION, " upload_progress=", var_export(ini_get("session.upload_progress.enabled"), true), "\n";
+            exit(version_compare(PHP_VERSION, "8.3.36", ">=") && !ini_get("session.upload_progress.enabled") ? 0 : 1);'
 
   docker-compose:
     name: Docker Compose stack

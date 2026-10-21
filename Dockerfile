@@ -9,7 +9,9 @@ RUN composer install --no-dev --no-interaction --no-progress --prefer-dist \
         --optimize-autoloader --ignore-platform-reqs --no-scripts
 
 # ---- 2. Runtime ----
-FROM php:8.3-apache
+# Pinned to a release with the PHP2Shell fixes (CVE-2026-109618/109619, mod_php RCE).
+# Bump deliberately; never go below 8.3.36.
+FROM php:8.3.36-apache
 
 # pdo_mysql for the app; gd improves Dompdf image support
 RUN apt-get update \
@@ -21,7 +23,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
- && printf 'upload_max_filesize=10M\npost_max_size=12M\nexpose_php=Off\n' > "$PHP_INI_DIR/conf.d/agritrack.ini"
+ && printf 'upload_max_filesize=10M\npost_max_size=12M\nexpose_php=Off\n; unused by the app; disabled as defence in depth against PHP2Shell\nsession.upload_progress.enabled=Off\n' > "$PHP_INI_DIR/conf.d/agritrack.ini"
 
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 
