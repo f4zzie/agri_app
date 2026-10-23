@@ -10,23 +10,13 @@
     encode zstd gzip
 
     # --- Block obvious bad bots ---
-    # Returns 403 for requests whose User-Agent looks like a bot/crawler/scraper.
-    # Whitelist known-good crawlers below if you want them indexed.
+    # Returns 403 for requests whose User-Agent looks like a crawler/scraper
+    # but is not one of the known-good bots (Googlebot, Bingbot, etc.).
     @bad_ua {
-        header User-Agent /(?i)(bot|crawler|spider|scraper|harvest|scrapy|python-requests|go-http|okhttp|curl|wget|libwww|perl|python-urllib|headless|phantom|selenium|headlesschrome)/
+        header User-Agent /(?i)(crawler|spider|scraper|harvest|scrapy|python-requests|go-http|okhttp|curl|wget|libwww|perl|python-urllib|headless|phantom|selenium|headlesschrome|http.client|requests)/
+        not header User-Agent /(?i)(googlebot|bingbot|slurp|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|applebot|ia_archiver|dataprovider|semrushbot|ahrefsbot|mj12bot)/
     }
-
-    # Whitelist: never block these even if they match a bad pattern above.
-    @good_bot {
-        header User-Agent /(?i)(googlebot|bingbot|slurp|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|applebot|ia_archiver)/
-    }
-
-    # Block bad bots unless whitelisted
-    @block_bot {
-        @bad_ua
-        not @good_bot
-    }
-    respond @block_bot 403
+    respond @bad_ua 403
 
     reverse_proxy app:80
 }
