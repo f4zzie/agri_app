@@ -10,38 +10,13 @@
     encode zstd gzip
 
     # --- Block obvious bad bots ---
-    # Blocks requests whose User-Agent looks like a bot/crawler/scraper
-    # and does NOT look like a real browser.
+    # Returns 403 for requests whose User-Agent looks like a bot/crawler/scraper
+    # but does NOT look like a real browser.
     @bad_ua {
         header User-Agent /(?i)(bot|crawler|spider|scraper|harvest|scrapy|httpclient|python-requests|go-http|okhttp|curl|wget|libwww|perl|python-urllib|headless|phantom|selenium|headlesschrome)/
         not header User-Agent /(?i)(mozilla|applewebkit|gecko|chrome|safari|firefox|edge|opera)/
     }
     respond @bad_ua 403
 
-    # --- Rate limit auth endpoints (login, register, password reset) ---
-    @auth {
-        path /login.php
-        path /register.php
-        path /forgot_password.php
-        path /reset_password.php
-    }
-
-    handle @auth {
-        ratelimit {
-            key {remote_host}
-            interval 10s
-            burst 5
-        }
-        reverse_proxy app:80
-    }
-
-    # --- General rate limit to deter scraping ---
-    handle {
-        ratelimit {
-            key {remote_host}
-            interval 1s
-            burst 20
-        }
-        reverse_proxy app:80
-    }
+    reverse_proxy app:80
 }
