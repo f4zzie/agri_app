@@ -1,6 +1,47 @@
-# AgriTrack behind Caddy: automatic HTTPS (Let's Encrypt) for $DOMAIN,
-# HTTP -> HTTPS redirect, and X-Forwarded-For / X-Forwarded-Proto to the app.
+# Production override: Caddy in front of the app for automatic HTTPS.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Every secret comes from .env next to this file (see docs/DEPLOY.md); compose
+# refuses to start if a required one is missing. Only Caddy publishes ports:
+# the app's 8080 is removed and the database is never published.
+# Needs Docker Compose 2.24.4+ for "!reset".
 {$DOMAIN} {
-	encode zstd gzip
-	reverse_proxy app:80
+    encode zstd gzip
+
+    # --- Block obvious bad bots ---
+    # Blocks requests whose User-Agent looks like a bot/crawler/scraper
+    # and does NOT look like a real browser.
+    @bad_ua {
+        header User-Agent /(?i)(bot|crawler|spider|scraper|harvest|scrapy|httpclient|python-requests|go-http|okhttp|curl|wget|libwww|perl|python-urllib|headless|phantom|selenium|headlesschrome)/
+        not header User-Agent /(?i)(mozilla|applewebkit|gecko|chrome|safari|firefox|edge|opera)/
+    }
+    respond @bad_ua 403
+
+    # --- Rate limit auth endpoints (login, register, password reset) ---
+    @auth {
+        path /login.php
+        path /register.php
+        path /forgot_password.php
+        path /reset_password.php
+    }
+
+    handle @auth {
+        ratelimit {
+            key {remote_host}
+            interval 10s
+            burst 5
+        }
+        reverse_proxy app:80
+    }
+
+    # --- General rate limit to deter scraping ---
+    handle {
+        ratelimit {
+            key {remote_host}
+            interval 1s
+            burst 20
+        }
+        reverse_proxy app:80
+    }
 }
