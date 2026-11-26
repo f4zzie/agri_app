@@ -1,4 +1,4 @@
-# 🌐 **LIVE DEMO → [https://agriapp.duckdns.org](https://agriapp.duckdns.org)**
+
 
 # 🌿 AgriTrack — a farmer-to-business marketplace for Kenya
 
